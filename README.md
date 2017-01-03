@@ -1,5 +1,7 @@
 # BinaryStream
-BinaryStream - a writer and reader for binary data
+BinaryStream - a writer and reader for binary data.
+
+[![Composer package](http://xn--e1adiijbgl.xn--p1acf/badge/wapmorgan/binary-stream)](https://packagist.org/packages/wapmorgan/binary-stream)
 
 **How to read mp3 with BinaryStream**:
 ```php
@@ -63,7 +65,7 @@ $s->readGroup(['flag' => 1,
 ### Endian problems:
 
 ```php
-setEndian(BinaryStream::BIG) // or 
+setEndian(BinaryStream::BIG) // or
 setEndian(BinaryStream::LITTLE)
 ```
 

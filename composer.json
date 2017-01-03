@@ -1,0 +1,10 @@
+{
+    "name": "wapmorgan/binary-stream",
+    "description": "A writer and reader for binary data",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "wapmorgan\\BinaryStream\\": "src/"
+        }
+    }
+}
