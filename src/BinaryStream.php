@@ -264,7 +264,7 @@ class BinaryStream {
 
     public function saveConfiguration($file) {
         $config = fopen($file, 'w');
-        fwrite($config, '[default]'.PHP_EOL.'endian='.$this->endian.PHP_EOL);
+        fwrite($config, '[main]'.PHP_EOL.'endian='.$this->endian.PHP_EOL);
         foreach ($this->groups as $group_name => $group_fields) {
             fwrite($config, '[group:'.$group_name.']'.PHP_EOL);
             foreach ($group_fields as $field_name => $field_size)
