@@ -65,18 +65,37 @@ class BinaryStream {
     }
 
     public function readBits(array $bits) {
-        if ($this->bitOffset == 8) {
-            $this->bitOffset = 0;
-            $this->offset++;
-        }
-
-        if (!isset($cache[$this->offset]))
-            $cache[$this->offset] = $this->readChar();
-
         $result = array();
-        foreach ($bits as $bitName) {
-            $this->bitOffset++;
-            $result[$bitName] = (bool) ($cache[$this->offset] >> $this->bitOffset);
+        foreach ($bits as $key => $value) {
+            if (is_string($key)) {
+                $bits_name = $key;
+                $bits_count = $value;
+                $result_bit = 0;
+                for ($i = 0; $i < $bits_count; $i++) {
+                    if ($this->bitOffset == 8) {
+                        $this->bitOffset = 0;
+                        $this->offset++;
+                    }
+
+                    if (!isset($cache[$this->offset]))
+                        $cache[$this->offset] = $this->readChar();
+
+                    $result_bit = ($result_bit << 1) + ($cache[$this->offset] >> $this->bitOffset);
+                }
+                $result[$bits_name] = $result_bit;
+            } else {
+                if ($this->bitOffset == 8) {
+                    $this->bitOffset = 0;
+                    $this->offset++;
+                }
+
+                if (!isset($cache[$this->offset]))
+                    $cache[$this->offset] = $this->readChar();
+
+                $bitName = $value;
+                $this->bitOffset++;
+                $result[$bitName] = (bool) ($cache[$this->offset] >> $this->bitOffset);
+            }
         }
         return $result;
     }
@@ -166,13 +185,16 @@ class BinaryStream {
 
             switch ($field_type) {
                 case 'bit':
-                    if ($bitOffset == 8) {
-                        $bitOffset = 0;
-                        $offset++;
-                    }
+                    $result_bit = 0;
+                    for ($i = 0; $i < $field_size_in_bits; $i++) {
+                        if ($bitOffset == 8) {
+                            $bitOffset = 0;
+                            $offset++;
+                        }
 
-                    $bitOffset++;
-                    $group[$field_name] = (bool) ($cache[$offset] >> $bitOffset);
+                        $result_bit = ($result_bit << 1) + ($cache[$offset] >> $bitOffset);
+                    }
+                    $group[$field_name] = $result_bit;
                     break;
 
                 case 's':
