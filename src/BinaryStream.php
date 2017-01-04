@@ -277,6 +277,11 @@ class BinaryStream {
         $this->groups[$name] = $fields;
     }
 
+    public function compare($sizeInBytes, $bytes) {
+        $data = fread($this->fp, $sizeInBytes);
+        return ($data == $bytes);
+    }
+
     protected function readChar() {
         $char = fgetc($this->fp);
         if ($char !== false)
