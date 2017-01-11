@@ -10,9 +10,7 @@ BinaryStream - a writer and reader for binary data.
 ```php
 $s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
 $s->loadConfiguration(__DIR__.'/../conf/mp3.conf');
-
 function convertText($content) { return ($content[0] == 0x00) ? mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1') : substr($content, 1); }
-
 if ($s->compare(3, 'ID3')) {
     $header = $s->readGroup('id3v2');
     $group = ($header['version'] == 2) ? 'id3v232' : 'id3v234';

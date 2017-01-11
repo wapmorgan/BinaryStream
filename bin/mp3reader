@@ -5,9 +5,7 @@ if (!isset($argv[1])) die('Usage: '.__FILE__.' <mp3file>'.PHP_EOL);
 
 $s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
 $s->loadConfiguration(__DIR__.'/../conf/mp3.conf');
-
 function convertText($content) { return ($content[0] == 0x00) ? mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1') : substr($content, 1); }
-
 if ($s->compare(3, 'ID3')) {
     $header = $s->readGroup('id3v2');
     $header_size = null;
@@ -15,11 +13,7 @@ if ($s->compare(3, 'ID3')) {
         $header_size .= decbin(ord($header['size'][$i]));
     }
     $header_size = bindec($header_size);
-    switch ($header['version']) {
-        case 3: case 4: $group = 'id3v234'; break;
-        case 2: $group = 'id3v232'; break;
-    }
-
+    $group = ($header['version'] == 2) ? 'id3v232' : 'id3v234';
     $tags_2 = array();
     while (!$s->compare(3, "\00\00\00")) {
         $frame = $s->readGroup($group);
