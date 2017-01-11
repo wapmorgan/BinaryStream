@@ -25,16 +25,16 @@ if ($s->compare(3, 'ID3')) {
         $frame = $s->readGroup($group);
         $frame_content = $s->readString($frame['size']);
         switch ($frame['id']) {
-            case 'TIT2': $tags_2['song'] = convertText($frame_content); break;
-            case 'TALB': $tags_2['album'] = convertText($frame_content); break;
-            case 'TPE1': $tags_2['artist'] = convertText($frame_content); break;
-            case 'TYER': $tags_2['year'] = convertText($frame_content); break;
-            case 'COMM':
+            case 'TIT2': case 'TT2': $tags_2['song'] = convertText($frame_content); break;
+            case 'TALB': case 'TAL': $tags_2['album'] = convertText($frame_content); break;
+            case 'TPE1': case 'TP1': $tags_2['artist'] = convertText($frame_content); break;
+            case 'TYER': case 'TYE': $tags_2['year'] = convertText($frame_content); break;
+            case 'COMM': case 'COM':
                 $frame_content = substr(convertText($frame_content), 3);
                 $tags_2['comment'] = strpos($frame_content, "\00") ? substr($frame_content, strpos($frame_content, "\00") + 1) : $frame_content;
                 break;
-            case 'TRCK': $tags_2['track'] = convertText($frame_content); break;
-            case 'TCON': $tags_2['genre'] = convertText($frame_content); break;
+            case 'TRCK': case 'TRK': $tags_2['track'] = convertText($frame_content); break;
+            case 'TCON': case 'TCO': $tags_2['genre'] = convertText($frame_content); break;
         }
     }
     var_dump($tags_2);
