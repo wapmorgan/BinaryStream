@@ -12,16 +12,18 @@ class BinaryStream {
     protected $endian = 'little';
     protected $types = array(
         'little' => array(
-            'short' => 'v'
+            'char' => 'C',
+            'short' => 'v',
             'integer' => 'V',
-            'long' => 'P'
+            'long' => 'P',
             'float' => 'f',
             'double' => 'd',
         ),
         'big' => array(
-            'short' => 'n'
+            'char' => 'C',
+            'short' => 'n',
             'integer' => 'N',
-            'long' => 'J'
+            'long' => 'J',
             'float' => 'f',
             'double' => 'd',
         ),
@@ -35,6 +37,9 @@ class BinaryStream {
         'float' => array(
             32 => 'float',
             64 => 'double',
+        ),
+        'char' => array(
+            8 => 'char'
         ),
     );
     protected $groups = array();
@@ -131,7 +136,7 @@ class BinaryStream {
     public function readString($sizeInBytes = 1) {
         $data = fread($this->fp, $sizeInBytes);
         if ($data !== false)
-            $this->offset += $bytes;
+            $this->offset += $sizeInBytes;
         else
             $this->offset = ftell($this->fp);
         return $data;
@@ -151,16 +156,17 @@ class BinaryStream {
         $size = 0;
         foreach ($fields as $field_name => $field_size_in_bits) {
             if (strpos($field_name, ':') !== false) {
-                $field_name = substr($field_name, strpos($field_name, ':'));
                 switch (strstr($field_name, ':', true)) {
                     case 's': $field_type = 'string'; break;
                     case 'i': $field_type = 'integer'; break;
                     case 'f': $field_type = 'float'; break;
+                    case 'c': $field_type = 'char'; break;
                 }
+                $field_name = substr($field_name, strpos($field_name, ':') + 1);
             } else
                 $field_type = 'bit';
 
-            if ($field_type == 'string')
+            if ($field_type == 'string' || $field_type == 'char')
                 $size += $field_size_in_bits;
             else
                 $size += $field_size_in_bits / 8;
@@ -168,18 +174,20 @@ class BinaryStream {
 
         $cache = array();
         for ($offset = 0; $offset < $size; $offset++) {
-            $cache[$i] = $this->readChar();
+            $cache[$offset] = $this->readChar();
         }
+        $offset = 0;
         $bitOffset = 0;
 
         foreach ($fields as $field_name => $field_size_in_bits) {
             if (strpos($field_name, ':') !== false) {
-                $field_name = substr($field_name, strpos($field_name, ':'));
                 switch (strstr($field_name, ':', true)) {
                     case 's': $field_type = 'string'; break;
                     case 'i': $field_type = 'integer'; break;
                     case 'f': $field_type = 'float'; break;
+                    case 'c': $field_type = 'char'; break;
                 }
+                $field_name = substr($field_name, strpos($field_name, ':') + 1);
             } else
                 $field_type = 'bit';
 
@@ -197,19 +205,20 @@ class BinaryStream {
                     $group[$field_name] = $result_bit;
                     break;
 
-                case 's':
+                case 'string':
                     if ($bitOffset != 0) {
                         $bitOffset = 0;
                         $offset++;
                     }
 
                     $group[$field_name] = null;
-                    for ($i = 0; $i < $field_size_in_bits; $i++)
-                        $group[$field_name] .= $cache[$offset];
-                        $offset++;
+                    for ($i = 0; $i < $field_size_in_bits; $i++) {
+                        $group[$field_name] .= $cache[$offset+$i];
+                    }
+                    $offset += $field_size_in_bits;
                     break;
 
-                case 'i':
+                case 'integer':
                     if ($field_size_in_bits >= 16 && $field_size_in_bits <= 64 && $field_size_in_bits % 8 == 0) {
                         $bytes = $field_size_in_bits / 8;
                         $data = null;
@@ -218,11 +227,12 @@ class BinaryStream {
                             $offset++;
                         }
 
-                        $group[$field_name] = unpack($this->types[$this->endian][$this->labels['integer'][$field_size_in_bits]], $data);
+                        $unpacked = unpack($this->types[$this->endian][$this->labels['integer'][$field_size_in_bits]], $data);
+                        $group[$field_name] = $unpacked[1];
                     }
                     break;
 
-                case 'f':
+                case 'float':
                     if ($field_size_in_bits == 32 || $field_size_in_bits == 64) {
                         $bytes = $field_size_in_bits / 8;
                         $data = null;
@@ -231,7 +241,18 @@ class BinaryStream {
                             $offset++;
                         }
 
-                        $group[$field_name] = unpack($this->types[$this->endian][$this->labels['float'][$field_size_in_bits]], $data);
+                        // $unpacked = unpack($this->types[$this->endian][$this->labels['float'][$field_size_in_bits]], $data);
+                        // if ($unpacked[1] >> ($field_size_in_bits - 1) == 1)
+                        //     $group[$field_name] = -($unpacked[1] ^ bindec('1'.str_repeat('0', $field_size_in_bits - 1)));
+                        // else
+                            $group[$field_name] = $unpacked[1];
+                    }
+                    break;
+
+                case 'char':
+                    if ($field_size_in_bits == 1) {
+                        $data = $cache[$offset++];
+                        $group[$field_name] = ord($data);
                     }
                     break;
             }
@@ -247,12 +268,16 @@ class BinaryStream {
         $this->marks[$name] = $offset;
     }
 
-    public function goto($offsetOrMark) {
+    public function go($offsetOrMark) {
         if (is_string($offsetOrMark)) {
             if (isset($this->marks[$offsetOrMark]))
                 fseek($this->fp, $this->marks[$offsetOrMark]);
         } else {
-            fseek($this->fp, $offsetOrMark)
+            if ($offsetOrMark < 0)
+                fseek($this->fp, $offsetOrMark, SEEK_END);
+            else
+                fseek($this->fp, $offsetOrMark);
+
         }
     }
 
@@ -301,10 +326,11 @@ class BinaryStream {
 
     public function compare($sizeInBytes, $bytes) {
         $data = fread($this->fp, $sizeInBytes);
-        return ($data == $bytes);
+        fseek($this->fp, -$sizeInBytes, SEEK_CUR);
+        return ($data === $bytes);
     }
 
-    protected function readChar() {
+    public function readChar($sizeInBytes = 1) {
         $char = fgetc($this->fp);
         if ($char !== false)
             $this->offset++;
