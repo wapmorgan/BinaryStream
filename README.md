@@ -43,14 +43,13 @@ if ($s->compare(3, 'TAG')) {
 
 ## Types:
 
-- string(s) - Sequence of `s` bytes.
-- char(s) - Sequence of `s` bytes.
-- bit(s=1) - Sequence of `s` bits.
-- integer(s) - Integer in `s` bits.
-- float(s) - Float of `s` bits.
+- `string(s)` - String of `s` bytes.
+- `char(s)` - Chars of `s` bytes.
+- `bit(s=1)` - Sequence of `s` bits.
+- `integer(s)` - Integer of `s` bits.
+- `float(s)` - Float of `s` bits.
 
 ## API
-
 #### Initiation
 
 - `new BinaryStream(filename)` or
@@ -76,7 +75,6 @@ $s->readGroup(['flag' => 1,
 - `compare($length, $bytes)`: Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
 
 #### Navigation
-
 - `mark(name)`
 - `markOffset(offset, name)`: Marks current position or specific position with `mark` name. After that, you can jump to current position with _go()_ methods.
 - `go(offset)`
