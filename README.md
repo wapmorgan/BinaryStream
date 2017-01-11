@@ -6,6 +6,58 @@ BinaryStream - a writer and reader for binary data.
 [![Latest Stable Version](https://poser.pugx.org/wapmorgan/binary-stream/version)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Unstable Version](https://poser.pugx.org/wapmorgan/binary-stream/v/unstable)](//packagist.org/packages/wapmorgan/binary-stream)
 
+1. API
+2. Example
+
+## API
+### Types
+Library manipulates following data types:
+- `string(s)` - String of `s` bytes.
+- `char(s)` - Chars of `s` bytes.
+- `bit(s=1)` - Sequence of `s` bits.
+- `integer(s)` - Integer of `s` bits.
+- `float(s)` - Float of `s` bits.
+
+#### Initiation
+- `new BinaryStream(filename)` or
+- `new BinaryStream(socket)` or
+- `new BinaryStream(stream)`
+
+#### Reading
+- `boolean readBit() // true or false`: Reads one bit at a time. Returns **true** or **false**.
+- `array readBits(array bitsList)`: Reads few bits. Return an array with boolean values.
+- `integer readInteger(int lengthInBits)`
+- `float readFloat(int lengthInBits)`: Reads int or float and returns it.
+- `string readString(int lengthInBytes)`
+- `int readChar()`
+- `array readGroup(name)`
+- `array readGroup(array fields)`: Reads few fields.
+
+_Example_:
+```php
+$s->readGroup(['flag' => 1,
+  'i:counter' => 8,
+  'f:time' => 16]);
+```
+
+#### Comparation
+- `compare($length, $bytes)`: Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
+
+#### Navigation
+- `mark(name)`
+- `markOffset(offset, name)`: Marks current position or specific position with `mark` name. After that, you can jump to current position with _go()_ methods.
+- `go(offset)`
+- `go(name)`
+- `isMarked(name)`: Returns **true** or **false**.
+- `skip(bytes)`: Move carret position on `bytes` bytes.
+
+#### Configuration
+- `saveGroup(name, array fields)`: Create new group with few fields. If group with that name already exists, it replaces.
+- `setEndian($endian) // BinaryStream::BIG or BinaryStream::LITTLE`
+- `loadConfiguration(file)`: Saves groups and endian settings in configuration file.
+- `saveConfiguration(file)`: Loads groups and ending settings from file.
+
+## Example
 **How to read mp3 with BinaryStream**:
 ```php
 $s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
@@ -39,63 +91,4 @@ if ($s->compare(3, 'TAG')) {
     $tags = $s->readGroup('id3v1');
     var_dump(array_map(function ($item) { return trim($item); }, $tags));
 }
-```
-
-## Types:
-
-- `string(s)` - String of `s` bytes.
-- `char(s)` - Chars of `s` bytes.
-- `bit(s=1)` - Sequence of `s` bits.
-- `integer(s)` - Integer of `s` bits.
-- `float(s)` - Float of `s` bits.
-
-## API
-#### Initiation
-
-- `new BinaryStream(filename)` or
-- `new BinaryStream(socket)` or
-- `new BinaryStream(stream)`
-
-#### Reading
-- `boolean readBit() // true or false`: Reads one bit at a time. Returns **true** or **false**.
-- `array readBits(array bitsList)`: Reads few bits. Return an array with boolean values.
-- `integer readInteger(int lengthInBits)`
-- `float readFloat(int lengthInBits)`: Reads int or float and returns it.
-- `array readGroup(name)`
-- `array readGroup(array fields)`: Reads few fields.
-
-_Example_:
-```php
-$s->readGroup(['flag' => 1,
-  'i:counter' => 8,
-  'f:time' => 16]);
-```
-
-#### Comparation
-- `compare($length, $bytes)`: Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
-
-#### Navigation
-- `mark(name)`
-- `markOffset(offset, name)`: Marks current position or specific position with `mark` name. After that, you can jump to current position with _go()_ methods.
-- `go(offset)`
-- `go(name)`
-- `isMarked(name)`: Returns **true** or **false**.
-- `skip(bytes)`: Move carret position on `bytes` bytes.
-
-#### Configuration
-
-- `saveGroup(name, array fields)`: Create new group with few fields. If group with that name already exists, it replaces.
-- `setEndian($endian) // BinaryStream::BIG or BinaryStream::LITTLE`
-- `loadConfiguration(file)`: Saves groups and endian settings in configuration file.
-- `saveConfiguration(file)`: Loads groups and ending settings from file.
-
-## Config
-Configuration file will be like:
-```ini
-[main]
-endian=little
-[group:mp3header]
-flag=1
-i:counter=8
-f:time=16
 ```
