@@ -8,18 +8,39 @@ BinaryStream - a writer and reader for binary data.
 
 **How to read mp3 with BinaryStream**:
 ```php
-$s = new BinaryStream('audio.mp3');
-$s->loadConfiguration('mp3.conf');
-if ($s->compare(3, 'TAG')) {
-  $tag_header = $s->readGroup('tag_header');
-  /* <....> */
+$s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
+$s->loadConfiguration(__DIR__.'/../conf/mp3.conf');
+
+function convertText($content) { return ($content[0] == 0x00) ? mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1') : substr($content, 1); }
+
+if ($s->compare(3, 'ID3')) {
+    $header = $s->readGroup('id3v2');
+    $group = ($header['version'] == 2) ? 'id3v232' : 'id3v234';
+    $tags_2 = array();
+    while (!$s->compare(3, "\00\00\00")) {
+        $frame = $s->readGroup($group);
+        $frame_content = $s->readString($frame['size']);
+        switch ($frame['id']) {
+            case 'TIT2': $tags_2['song'] = convertText($frame_content); break;
+            case 'TALB': $tags_2['album'] = convertText($frame_content); break;
+            case 'TPE1': $tags_2['artist'] = convertText($frame_content); break;
+            case 'TYER': $tags_2['year'] = convertText($frame_content); break;
+            case 'COMM':
+                $frame_content = substr(convertText($frame_content), 3);
+                $tags_2['comment'] = strpos($frame_content, "\00") ? substr($frame_content, strpos($frame_content, "\00") + 1) : $frame_content;
+                break;
+            case 'TRCK': $tags_2['track'] = convertText($frame_content); break;
+            case 'TCON': $tags_2['genre'] = convertText($frame_content); break;
+        }
+    }
+    var_dump($tags_2);
 }
 
-/* <....> */
-
-if ($s->compare(2, 0x1234)) {
-  $v1_header = $s->readGroup('id3v1_header');
-  /* <....> */
+$s->go(-128);
+if ($s->compare(3, 'TAG')) {
+    $tags = $s->readGroup('id3v1');
+    var_dump(array_map(function ($item) { return trim($item); }, $tags));
+}
 }
 ```
 

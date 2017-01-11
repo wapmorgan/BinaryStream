@@ -6,13 +6,7 @@ if (!isset($argv[1])) die('Usage: '.__FILE__.' <mp3file>'.PHP_EOL);
 $s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
 $s->loadConfiguration(__DIR__.'/../conf/mp3.conf');
 
-function convertText($content) {
-    if ($content[0] == 0x00) {
-        return mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1');
-    } else {
-        return substr($content, 1);
-    }
-}
+function convertText($content) { return ($content[0] == 0x00) ? mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1') : substr($content, 1); }
 
 if ($s->compare(3, 'ID3')) {
     $header = $s->readGroup('id3v2');
@@ -22,46 +16,25 @@ if ($s->compare(3, 'ID3')) {
     }
     $header_size = bindec($header_size);
     switch ($header['version']) {
-        case 3:
-        case 4:
-            $group = 'id3v234';
-            break;
-        case 2:
-            $group = 'id3v232';
-            break;
+        case 3: case 4: $group = 'id3v234'; break;
+        case 2: $group = 'id3v232'; break;
     }
-
-
 
     $tags_2 = array();
     while (!$s->compare(3, "\00\00\00")) {
         $frame = $s->readGroup($group);
         $frame_content = $s->readString($frame['size']);
         switch ($frame['id']) {
-            case 'TIT2':
-            case 'TIT':
-                $tags_2['song'] = convertText($frame_content);
-                break;
-            case 'TALB':
-                $tags_2['album'] = convertText($frame_content);
-                break;
-            case 'TPE1':
-                $tags_2['artist'] = convertText($frame_content);
-                break;
-            case 'TYER':
-                $tags_2['year'] = convertText($frame_content);
-                break;
+            case 'TIT2': $tags_2['song'] = convertText($frame_content); break;
+            case 'TALB': $tags_2['album'] = convertText($frame_content); break;
+            case 'TPE1': $tags_2['artist'] = convertText($frame_content); break;
+            case 'TYER': $tags_2['year'] = convertText($frame_content); break;
             case 'COMM':
-                //$tags_2['comment'] =
-                $frame_content = convertText($frame_content);
-                $comment = substr($frame_content, 3);
-                $tags_2['comment'] = strpos($comment, "\00") ? substr($comment, strpos($comment, "\00") + 1) : $comment;
+                $frame_content = substr(convertText($frame_content), 3);
+                $tags_2['comment'] = strpos($frame_content, "\00") ? substr($frame_content, strpos($frame_content, "\00") + 1) : $frame_content;
                 break;
-            case 'TRCK':
-                $tags_2['track'] = convertText($frame_content);
-                break;
-            case 'TCON':
-                $tags_2['genre'] = convertText($frame_content);
+            case 'TRCK': $tags_2['track'] = convertText($frame_content); break;
+            case 'TCON': $tags_2['genre'] = convertText($frame_content); break;
         }
     }
     var_dump($tags_2);
