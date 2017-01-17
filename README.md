@@ -6,7 +6,7 @@ BinaryStream - a writer and reader for binary data.
 [![Latest Stable Version](https://poser.pugx.org/wapmorgan/binary-stream/version)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Unstable Version](https://poser.pugx.org/wapmorgan/binary-stream/v/unstable)](//packagist.org/packages/wapmorgan/binary-stream)
 
-A reader of binary files with useful snippets and created installations. This library can read separate bits, groups of bits, data types (strings, chars, integer, float ), read by groups and can load settings from configuration files.
+A reader of binary files with useful snippets and pre-built configurations. This library can read separate bits, groups of bits, high-level data types (strings, chars, integers, floats), read by groups and load settings from configuration files.
 
 1. **API**
 2. **Example**
