@@ -10,10 +10,10 @@ If you are looking for a tool that would allow convenient to read and write bina
 
 _BinaryStream_ - is a powerful tool for reading and writing binary files. It supports a variety of high-level data types and sometimes lets you forget that you are working with unstructured binary data.
 
-1. **Features**
-2. **Manual**
-3. **Reference**
-4. **Advanced usage. Writing**
+1. [**Features**](#features)
+2. [**Manual**](#manual)
+3. [**Reference**](#reference)
+4. [**Advanced usage. Writing**](#advaned-usage-writing)
 
 ## Features
 * The library supports all major data types and allows both read and write the data.
