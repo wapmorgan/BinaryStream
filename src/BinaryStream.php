@@ -5,7 +5,13 @@ class BinaryStream {
     const BIG = 'big';
     const LITTLE = 'little';
 
+    const READ = 0;
+    const CREATE = 1;
+    const REWRITE = 2;
+    const APPEND = 3;
+
     protected $fp;
+    protected $isWritable = false;
     protected $offset = 0;
     protected $bitOffset = 0;
     protected $cache = array();
@@ -45,15 +51,40 @@ class BinaryStream {
     protected $groups = array();
     protected $marks = array();
 
-    public function __construct($file) {
+    public function __construct($file, $mode = self::READ) {
         if (is_string($file)) {
-            if (!file_exists($file))
-                $this->fp = fopen($file, 'w');
-            else
-                $this->fp = fopen($file, 'r');
+            switch ($mode) {
+                case self::READ:
+                    if (!file_exists($file))
+                        throw new \Exception('File "'.$file.'" does not exist in file system! Can not open it for reading!');
+                    else
+                        $this->fp = fopen($file, 'rb');
+                    break;
+                case self::CREATE:
+                    if (file_exists($file))
+                        throw new \Exception('File "'.$file.'" does exist in file system! Can not open it for creating!');
+                    else
+                        $this->fp = fopen($file, 'wb');
+                    break;
+                case self::REWRITE:
+                    if (!file_exists($file))
+                        throw new \Exception('File "'.$file.'" does not exist in file system! Can not open it for rewriting!');
+                    else
+                        $this->fp = fopen($file, 'wb');
+                    break;
+                case self::APPEND:
+                    if (!file_exists($file))
+                        throw new \Exception('File "'.$file.'" does not exist in file system! Can not open it for appending!');
+                    else
+                        $this->fp = fopen($file, 'ab');
+                    break;
+                default:
+                    throw new \Exception('Invalid open mode: '.$mode.'!');
+            }
         } else if (is_resource($file)) {
             $this->fp = $file;
         }
+        $this->mode = $mode;
     }
 
     public function readBit() {
@@ -345,5 +376,114 @@ class BinaryStream {
         }
 
         return ($sizeInBytes == 1) ? $chars[0] : $chars;
+    }
+
+    public function writeBit($bit) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        $this->bitOffset++;
+
+        if (!isset($this->cache[$this->offset])) {
+            $this->cache[$this->offset] = 0;
+        }
+        $this->cache[$this->offset] = ($this->cache[$this->offset] << 1) + (int)$bit;
+
+        if ($this->bitOffset == 8) {
+            var_dump($this->cache[$this->offset]);
+            fwrite($this->fp, chr($this->cache[$this->offset]));
+            $this->bitOffset = 0;
+            $this->offset++;
+        }
+    }
+
+    public function writeBits(array $bits) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        foreach ($bits as $value) {
+            if (is_array($value)) {
+                $bits_count = $value[0];
+                $value = $value[1];
+                for ($i = 0; $i < $bits_count; $i++) {
+
+                    if (!isset($this->cache[$this->offset]))
+                        $this->cache[$this->offset] = 0;
+
+                    $this->bitOffset++;
+                    $bit = ($value >> ($bits_count - ($i + 1))) & 1;
+                    $this->cache[$this->offset] = ($this->cache[$this->offset] << 1) + (int)$bit;
+
+                    if ($this->bitOffset == 8) {
+                        fwrite($this->fp, chr($this->cache[$this->offset]));
+                        $this->bitOffset = 0;
+                        $this->offset++;
+                    }
+                }
+            } else {
+                if (!isset($this->cache[$this->offset]))
+                    $this->cache[$this->offset] = 0;
+
+                $this->bitOffset++;
+
+                $this->cache[$this->offset] = ($this->cache[$this->offset] << 1) + (int)$value;
+
+                if ($this->bitOffset == 8) {
+                    fwrite($this->fp, chr($this->cache[$this->offset]));
+                    $this->bitOffset = 0;
+                    $this->offset++;
+                }
+            }
+        }
+    }
+
+    public function writeInteger($integer, $sizeInBits) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        if ($sizeInBits >= 16 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
+            $bytes = $sizeInBits / 8;
+            $data = pack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $integer);
+            if (fwrite($this->fp, $data)) {
+                $this->offset += $bytes;
+            } else {
+                $this->offset = ftell($this->fp);
+            }
+        }
+    }
+
+    public function writeFloat($float, $sizeInBits) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        if ($sizeInBits == 32 || $sizeInBits == 64) {
+            $bytes = $sizeInBits / 8;
+            $data = pack($this->types[$this->endian][$this->labels['float'][$sizeInBits]], $float);
+            if (fwrite($this->fp, $data)) {
+                $this->offset += $bytes;
+            } else {
+                $this->offset = ftell($this->fp);
+            }
+        }
+    }
+
+    public function writeChar($char) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        if (is_int($char))
+            $char = chr($char);
+        if (fwrite($this->fp, $char))
+            $this->offset++;
+    }
+
+    public function writeString($string) {
+        if ($this->mode == self::READ)
+            throw new \Exception('This operation is not allowed in READ mode!');
+
+        if (fwrite($this->fp, $string))
+            $this->offset += strlen($string);
+        else
+            $this->offset = ftell($this->fp);
     }
 }
