@@ -115,7 +115,7 @@ class BinaryStream {
                 $this->offset = ftell($this->fp);
 
             $value = unpack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $data);
-            return $value;
+            return $value[1];
         }
     }
 
@@ -129,7 +129,7 @@ class BinaryStream {
                 $this->offset = ftell($this->fp);
 
             $value = unpack($this->types[$this->endian][$this->labels['float'][$sizeInBits]], $data);
-            return $value;
+            return $value[1];
         }
     }
 
@@ -279,6 +279,7 @@ class BinaryStream {
                 fseek($this->fp, $offsetOrMark);
 
         }
+        $this->offset = ftell($this->fp);
     }
 
     public function isMarked($name) {
