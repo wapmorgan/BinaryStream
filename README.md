@@ -143,21 +143,27 @@ or by using general methods:
 | `readGroup(array $fields)` | `$data = $s->readGroup(['i:field' => 32, 's:text' => 20]);` | The fields are listed in the as array in which the keys determine the type and the name of the data fields, and values - dimension (understood as bytes for string and chars, and as bits for everything else). Supported: `s`, `c`, `i` and `f`. If the type is not specified, the field is perceived as a bit (or a few bits). The type and name are separated by a colon (:). |   |
 
 
-To see more of the following bytes to match a particular pattern, use the `compare()` method.
+To see if following bytes match a particular pattern, use the `compare()` method.
 ```php
 compare($length, $bytes)
 ```
-Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
+Compares `$length` bytes from current position with `$bytes`. Carrent position will not be changed. Returns **true** or **false**.
 
 To change the position of the cursor in the file use the following methods.
-- `go(offset)`: Goes to an absolute `offset` position.
-- `go(name)`: Goes to a position of `name` mark.
-- `skip(bytes)`: Move carret position on `bytes` bytes.
+
+| Method         | Usage                      | Notes                                                                                                                                                         |
+|----------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `go($offset)`  | `$stream->go(-128);`       | It goes to the absolute position in the file. If you pass a negative value, the value of the cursor will be set to `-$offset` bytes from the end of the file. |
+| `go($mark)`    | `$stream->go('FirstTag');` | It moves to the position where the `$mark` mark has been set.                                                                                                 |
+| `skip($bytes)` | `$stream->skip(4);`        | Skip the following `$bytes` bytes.                                                                                                                            |
 
 To set the a mark or check whether the mark with the specified name is set, use these methods:
-- `mark(name)`: Saves current position as `name` mark.
-- `markOffset(offset, name)`: Saves specific position as `name` mark
-- `isMarked(name)`: Checks whether mark is set.
+
+| Method                       | Usage                              | Notes                                                              |
+|------------------------------|------------------------------------|--------------------------------------------------------------------|
+| `mark($name)`                | `$stream->mark('Tag');`            | It saves the current cursor position under the `$name` name.       |
+| `markOffset($offset, $name)` | `$stream->markOffset('FirstTag');` | It saves specific position in file under the `$name` name.         |
+| `isMarked($name)`            | `$stream->isMarked('Tag');`        | Check whether the `$name` mark set. Returns **true** or **false**. |
 
 To change the reading order of bytes using `setEndian($endian)` method with one of `BinaryStream` constants:
 
