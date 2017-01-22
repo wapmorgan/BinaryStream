@@ -1,96 +1,180 @@
 # BinaryStream
-BinaryStream - a writer and reader for binary data.
+BinaryStream - a handy tool for working with binary data.
 
 [![Composer package](http://xn--e1adiijbgl.xn--p1acf/badge/wapmorgan/binary-stream)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![License](https://poser.pugx.org/wapmorgan/binary-stream/license)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Stable Version](https://poser.pugx.org/wapmorgan/binary-stream/version)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Unstable Version](https://poser.pugx.org/wapmorgan/binary-stream/v/unstable)](//packagist.org/packages/wapmorgan/binary-stream)
 
-A reader of binary files with useful snippets and pre-built configurations. This library can read separate bits, groups of bits, high-level data types (strings, chars, integers, floats), read by groups and load settings from configuration files.
+If you are looking for a tool that would allow convenient to read and write binary data (whether existing or created format you), you choose the correct library.
 
-1. **API**
-2. **Example**
+_BinaryStream_ - is a powerful tool for reading and writing binary files. It supports a variety of high-level data types and sometimes lets you forget that you are working with unstructured binary data.
 
-## API
-### Types
-Library manipulates following data types:
-- `string(s)` - String of `s` bytes.
-- `char(s)` - Chars of `s` bytes.
-- `bit(s=1)` - Sequence of `s` bits.
-- `integer(s)` - Integer of `s` bits.
-- `float(s)` - Float of `s` bits.
+1. **Features**
+2. **Manual**
+3. **Reference**
 
-#### Initiation
+## Features
+* The library supports all major data types and allows both read and write the data.
+* Supports both endian (big endian), and reverse (little). You can switch between them when reading a single file.
+* Supports multiple dimensions of **numbers** (16, 32 and 64).
+* Supports multiple dimensions of **fractional numbers** (32 and 64).
+* You can read both individual bytes and individual bits.
+* For ease of navigation through the file, you can specify BinaryStream remember some items in the file, to later return to them again.
+* If the file saved similar groups of data (eg, titles or frames), you can save the settings one-time group, and then use only the name of the group to read all the data.
+* If you plan to work with different file formats, you can save the entire configuration (which is the byte order, and all the groups of fields).
+
+## Manual
+### Simple usage
+The easiest way to use BinaryStream - this:
+```php
+use wapmorgan\BinaryStream\BinaryStream;
+$stream = new BinaryStream('filename.ext');
+$text = $s->readString(20);
+```
+This example reads 20 bytes at the beginning of the file as a string.
+
+A more complex example, where the data were located in the following order: **integer** (int, 32 Bit), **fractional** (float, 32 bits), a **flag byte** (where each bit has its own value, 8 bits): 1 bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: `00` - means that after recorded 1 character (char, 8 bits), 01 - means that after the written 10 characters (string, 10 bytes), `10` - means that followed in time unixtime format packaged in long integer (long, 64 bits), `11` - not used. In order to read these data and those that depend on the flags, this example is suitable:
+```php
+use wapmorgan\BinaryStream\BinaryStream;
+$stream = new BinaryStream('filename.ext');
+$int = $stream->readInteger(32);
+$float = $stream->readFloat(32);
+$flags = $stream->readBits([
+    'additional_data' => 1,
+    '_' => 5, // pointless data
+    'data_type' => 2,
+]);
+if ($flags['additional_data']) {
+    if ($flags['data_type'] == 0b00)
+        $char = $stream->readChar();
+    else if ($flags['data_type'] == 0b01)
+        $string = $stream->readString(10);
+    else if ($flags['data_type'] == 0b10)
+        $time = date('r', $stream->readInteger(64));
+}
+```
+In this example, we read the basic data and the additional, based on the value of flags.
+
+But it is unlikely to be so few data. For added convenience, you can use a group reading function. The previous example can be rewritten as follows:
+```php
+use wapmorgan\BinaryStream\BinaryStream;
+$stream = new BinaryStream('filename.ext');
+$data = $stream->readGroup([
+    'i:int' => 32,
+    'f:float' => 32,
+    'additional_data' => 1,
+    '_' => 5,
+    'data_type' => 2,
+]);
+if ($flags['additional_data']) {
+    if ($flags['data_type'] == 0b00)
+        $data['char'] = $stream->readChar();
+    else if ($flags['data_type'] == 0b01)
+        $data['string'] = $stream->readString(10);
+    else if ($flags['data_type'] == 0b10)
+        $data['time'] = date('r', $stream->readInteger(64));
+}
+```
+If you are reading a file in which such groups of data are repeated, you can save a group with a name, and then simply refer to it to read the next data. Let us introduce one more value for data_type: `11` - means that this is the last group of data in the file. An example would be:
+```php
+use wapmorgan\BinaryStream\BinaryStream;
+$stream = new BinaryStream('filename.ext');
+$stream->saveGroup('Data', [
+    'i:int' => 32,
+    'f:float' => 32,
+    'additional_data' => 1,
+    '_' => 5,
+    'data_type' => 2,
+]);
+
+while ($data['data_type'] != 0b11) {
+    $data = $stream->readGroup('Data');
+    // Some operations with data
+}
+```
+And now imagine that we have moved to a new file format that is different from the previous one and has a certain mark in the beginning of the file, which will help to distinguish the new from the old format. For example, a new label is a sequence of characters 'A', 'S', 'C'. We need to check the label and if it is present, parse the file according to another scheme, and if it does not, use the old version of the processor. An example to illustrate this:
+```php
+use wapmorgan\BinaryStream\BinaryStream;
+$stream = new BinaryStream('filename.ext');
+
+if ($stream->compare(3, 'ASC')) {
+    // parse here new format
+} else {
+    $stream->saveGroup('DataOld', [
+        'i:int' => 32,
+        'f:float' => 32,
+        'additional_data' => 1,
+        '_' => 5,
+        'data_type' => 2,
+    ]);
+
+    while ($data['data_type'] != 0b11) {
+        $data = $stream->readGroup('Data');
+        // Some operations with data
+    }
+}
+```
+
+
+## Reference
+Creating an object is possible in several ways:
 - `new BinaryStream(filename)` or
 - `new BinaryStream(socket)` or
 - `new BinaryStream(stream)`
 
-#### Reading
-- `boolean readBit() // true or false`: Reads one bit at a time. Returns **true** or **false**.
-- `array readBits(array bitsList)`: Reads few bits. Return an array with boolean values.
-- `integer readInteger(int lengthInBits)`
-- `float readFloat(int lengthInBits)`: Reads int or float and returns it.
-- `string readString(int lengthInBytes)`
-- `int readChar()`
-- `array readGroup(name)`
-- `array readGroup(array fields)`: Reads few fields.
+Reading data is possible using specialized methods for each data type:
 
-_Example_:
+| Data type     | Method                          | Return value         | Example                                                                                  | Notes                                                                                                |
+|---------------|---------------------------------|----------------------|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| **bit**       | `readBit()`                     | _boolean_            | `$flag = $s->readBit();`                                   | You can specify the number of bits to read in `readBits()` as a one number, for that specify the number bits after the field name. |
+|               | `readBits(array $listOfBits)`   | array of _boolean_   | `$flags = $s->readBits(['a' => 2, '_' => 5, 'b' => 3]); `  |                                                                                                                                    |
+| **char**      | `readChar($count = 1)`          | _string(1)_          | `$char = $s->readChar(); `                                 |                                                                                                                                    |
+|               |                                 | array of _string(1)_ | `$chars = $s->readChar(4);`                                |                                                                                                                                    |
+| **integer**   | `readInteger($sizeInBits = 32)` | _int_                | `$int = $s->readInteger(32); `                             | It supports the following dimensions: 16, 32, 64 bits.                                                                             |
+| **float**     | `readFloat($sizeInBits = 32)`   | _float_              | `$float = $s->readFloat(32); `                             | It supports the following dimensions: 32, 64 bits.                                                                                 |
+| **string**    | `readString($length)`           | _string($length)_    | `$string = $s->readString(10); `                           |                                                                                                                                    |
+
+or by using general methods:
+
+| Method                     | Usage                                                       | Notes                                                                                                                                                                                                                                                                                                                                                                            |   |
+|----------------------------|-------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|
+| `readGroup($name)`         | `$data = $s->readGroup('data');                             | It allows you to read data from pre-saved configuration. To save a group under a new name, use the method `saveGroup($name, array $fields)`                                                                                                                                                                                                                                      |   |
+| `readGroup(array $fields)` | `$data = $s->readGroup(['i:field' => 32, 's:text' => 20]);` | The fields are listed in the as array in which the keys determine the type and the name of the data fields, and values - dimension (understood as bytes for string and chars, and as bits for everything else). Supported: `s`, `c`, `i` and `f`. If the type is not specified, the field is perceived as a bit (or a few bits). The type and name are separated by a colon (:). |   |
+
+
+To see more of the following bytes to match a particular pattern, use the `compare()` method.
 ```php
-$s->readGroup(['flag' => 1,
-  'i:counter' => 8,
-  'f:time' => 16]);
+compare($length, $bytes)
 ```
+Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
 
-#### Comparation
-- `compare($length, $bytes)`: Compares `length` bytes from current position with `bytes`. Carrent position will not be changed. Returns **true** or **false**.
-
-#### Navigation
-- `mark(name)`
-- `markOffset(offset, name)`: Marks current position or specific position with `mark` name. After that, you can jump to current position with _go()_ methods.
-- `go(offset)`
-- `go(name)`
-- `isMarked(name)`: Returns **true** or **false**.
+To change the position of the cursor in the file use the following methods.
+- `go(offset)`: Goes to an absolute `offset` position.
+- `go(name)`: Goes to a position of `name` mark.
 - `skip(bytes)`: Move carret position on `bytes` bytes.
 
-#### Configuration
-- `saveGroup(name, array fields)`: Create new group with few fields. If group with that name already exists, it replaces.
-- `setEndian($endian) // BinaryStream::BIG or BinaryStream::LITTLE`
-- `loadConfiguration(file)`: Saves groups and endian settings in configuration file.
-- `saveConfiguration(file)`: Loads groups and ending settings from file.
+To set the a mark or check whether the mark with the specified name is set, use these methods:
+- `mark(name)`: Saves current position as `name` mark.
+- `markOffset(offset, name)`: Saves specific position as `name` mark
+- `isMarked(name)`: Checks whether mark is set.
 
-## Example
-**How to read mp3 with BinaryStream**:
+To change the reading order of bytes using `setEndian($endian)` method with one of `BinaryStream` constants:
+
+| Constant             | Meaning                              |
+|----------------------|--------------------------------------|
+| BinaryStream::BIG    | Big-endian for integers and floats   |
+| BinaryStream::LITTLE | Little-endian for integers and float |
+
+To save a group of data under one name, use `saveGroup()` method
 ```php
-$s = new wapmorgan\BinaryStream\BinaryStream($argv[1]);
-$s->loadConfiguration(__DIR__.'/../conf/mp3.conf');
-function convertText($content) { return ($content[0] == 0x00) ? mb_convert_encoding(substr($content, 1), 'utf-8', 'ISO-8859-1') : substr($content, 1); }
-if ($s->compare(3, 'ID3')) {
-    $header = $s->readGroup('id3v2');
-    $group = ($header['version'] == 2) ? 'id3v232' : 'id3v234';
-    $tags_2 = array();
-    while (!$s->compare(3, "\00\00\00")) {
-        $frame = $s->readGroup($group);
-        $frame_content = $s->readString($frame['size']);
-        switch ($frame['id']) {
-            case 'TIT2': case 'TT2': $tags_2['song'] = convertText($frame_content); break;
-            case 'TALB': case 'TAL': $tags_2['album'] = convertText($frame_content); break;
-            case 'TPE1': case 'TP1': $tags_2['artist'] = convertText($frame_content); break;
-            case 'TYER': case 'TYE': $tags_2['year'] = convertText($frame_content); break;
-            case 'COMM': case 'COM':
-                $frame_content = substr(convertText($frame_content), 3);
-                $tags_2['comment'] = strpos($frame_content, "\00") ? substr($frame_content, strpos($frame_content, "\00") + 1) : $frame_content;
-                break;
-            case 'TRCK': case 'TRK': $tags_2['track'] = convertText($frame_content); break;
-            case 'TCON': case 'TCO': $tags_2['genre'] = convertText($frame_content); break;
-        }
-    }
-    var_dump($tags_2);
-}
-
-$s->go(-128);
-if ($s->compare(3, 'TAG')) {
-    $tags = $s->readGroup('id3v1');
-    var_dump(array_map(function ($item) { return trim($item); }, $tags));
-}
+saveGroup($name, array $fields)
 ```
+Create new group with few fields. If group with that name already exists, it replaces    .
+
+Additional methods to work with configuration:
+
+| Method                     | Usage                                             | Notes                                                                                                                                                                                                 |
+|----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `loadConfiguration($file`  | `$stream->loadConfiguration('file_format.conf');` | Load configuration (byte order and data groups) from an external file. Configuration format - ini. To see an example of such a file, open the conf/mp3.conf file.                                     |
+| `saveConfiguration($file)` | `$stream->saveConfiguration('file_format.conf')`  | Saves the current settings of byte order and all created data groups to an external file in ini-format. This configuration can be later restored from the file with the method `loadConfiguration()`. |
