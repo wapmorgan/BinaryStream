@@ -8,7 +8,8 @@ class BinaryStream {
     const READ = 0;
     const CREATE = 1;
     const REWRITE = 2;
-    const APPEND = 3;
+    const RECREATE = 3;
+    const APPEND = 4;
 
     protected $fp;
     protected $isWritable = false;
@@ -66,11 +67,17 @@ class BinaryStream {
                     else
                         $this->fp = fopen($file, 'wb');
                     break;
-                case self::REWRITE:
+                case self::RECREATE:
                     if (!file_exists($file))
                         throw new \Exception('File "'.$file.'" does not exist in file system! Can not open it for rewriting!');
                     else
                         $this->fp = fopen($file, 'wb');
+                    break;
+                case self::REWRITE:
+                    if (!file_exists($file))
+                        throw new \Exception('File "'.$file.'" does not exist in file system! Can not open it for rewriting!');
+                    else
+                        $this->fp = fopen($file, 'r+b');
                     break;
                 case self::APPEND:
                     if (!file_exists($file))
