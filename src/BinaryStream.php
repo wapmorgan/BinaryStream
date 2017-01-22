@@ -62,11 +62,12 @@ class BinaryStream {
             $this->offset++;
         }
 
-        if (!isset($cache[$this->offset]))
-            $cache[$this->offset] = $this->readChar();
+        if (!isset($this->cache[$this->offset])) {
+            $this->cache[$this->offset] = ord(fread($this->fp, 1));
+        }
 
         $this->bitOffset++;
-        return (bool) ($cache[$this->offset] >> $this->bitOffset);
+        return (bool) (($this->cache[$this->offset] >> (8 - $this->bitOffset)) & 1);
     }
 
     public function readBits(array $bits) {
@@ -83,9 +84,10 @@ class BinaryStream {
                     }
 
                     if (!isset($cache[$this->offset]))
-                        $cache[$this->offset] = $this->readChar();
+                        $cache[$this->offset] = ord(fread($this->fp, 1));
 
-                    $result_bit = ($result_bit << 1) + ($cache[$this->offset] >> $this->bitOffset);
+                    $this->bitOffset++;
+                    $result_bit = ($result_bit << 1) + (($cache[$this->offset] >> (8 - $this->bitOffset)) & 1);
                 }
                 $result[$bits_name] = $result_bit;
             } else {
@@ -95,11 +97,11 @@ class BinaryStream {
                 }
 
                 if (!isset($cache[$this->offset]))
-                    $cache[$this->offset] = $this->readChar();
+                    $cache[$this->offset] = ord(fread($this->fp, 1));
 
                 $bitName = $value;
                 $this->bitOffset++;
-                $result[$bitName] = (bool) ($cache[$this->offset] >> $this->bitOffset);
+                $result[$bitName] = (bool) (($cache[$this->offset] >> (8 - $this->bitOffset)) & 1);
             }
         }
         return $result;
@@ -332,9 +334,14 @@ class BinaryStream {
     }
 
     public function readChar($sizeInBytes = 1) {
-        $char = fgetc($this->fp);
-        if ($char !== false)
-            $this->offset++;
-        return $char;
+        $chars = array();
+
+        for ($i = 0; $i < $sizeInBytes; $i++) {
+            $chars[$i] = fgetc($this->fp);
+            if ($chars[$i] !== false)
+                $this->offset++;
+        }
+
+        return ($sizeInBytes == 1) ? $chars[0] : $chars;
     }
 }
