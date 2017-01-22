@@ -241,7 +241,7 @@ class BinaryStream {
                             $offset++;
                         }
 
-                        // $unpacked = unpack($this->types[$this->endian][$this->labels['float'][$field_size_in_bits]], $data);
+                        $unpacked = unpack($this->types[$this->endian][$this->labels['float'][$field_size_in_bits]], $data);
                         // if ($unpacked[1] >> ($field_size_in_bits - 1) == 1)
                         //     $group[$field_name] = -($unpacked[1] ^ bindec('1'.str_repeat('0', $field_size_in_bits - 1)));
                         // else
