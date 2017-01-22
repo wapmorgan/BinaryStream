@@ -202,8 +202,10 @@ class BinaryStream {
                             $offset++;
                         }
 
-                        $result_bit = ($result_bit << 1) + ($cache[$offset] >> $bitOffset);
+                        $bitOffset++;
+                        $result_bit = ($result_bit << 1) + ((ord($cache[$offset]) >> (8 - $bitOffset)) & 1);
                     }
+                    if ($field_size_in_bits == 1) $result_bit = (bool) $result_bit;
                     $group[$field_name] = $result_bit;
                     break;
 
