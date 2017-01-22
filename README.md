@@ -13,6 +13,7 @@ _BinaryStream_ - is a powerful tool for reading and writing binary files. It sup
 1. **Features**
 2. **Manual**
 3. **Reference**
+4. **Advanced usage. Writing**
 
 ## Features
 * The library supports all major data types and allows both read and write the data.
@@ -116,7 +117,6 @@ if ($stream->compare(3, 'ASC')) {
 }
 ```
 
-
 ## Reference
 Creating an object is possible in several ways:
 - `new BinaryStream(filename)` or
@@ -184,3 +184,26 @@ Additional methods to work with configuration:
 |----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `loadConfiguration($file`  | `$stream->loadConfiguration('file_format.conf');` | Load configuration (byte order and data groups) from an external file. Configuration format - ini. To see an example of such a file, open the conf/mp3.conf file.                                     |
 | `saveConfiguration($file)` | `$stream->saveConfiguration('file_format.conf')`  | Saves the current settings of byte order and all created data groups to an external file in ini-format. This configuration can be later restored from the file with the method `loadConfiguration()`. |
+
+## Advaned usage. Writing
+If you are the one who needs to write data to binary files, you can use additional methods to do so.
+
+Firstly, you need to open a file in one of the modes that allow writing of a file (by default, files are opened in read-only mode). For this when you create an object BinaryStream specify in second argument one of the following modes:
+
+| Mode       | Constant                 | Notes                                                                                     |
+|------------|--------------------------|-------------------------------------------------------------------------------------------|
+| Creation   | `BinaryStream::CREATE`   | Use to create new files.                                                                  |
+| Recreation | `BinaryStream::RECREATE` | Erase all content and allows you to create a file from scratch.                           |
+| Rewriting  | `BinaryStream::REWRITE`  | It allows you to write over the contents of the file, changing only the specific content. |
+| Appending  | `BinaryStream::APPEND`   | It allows you to append the contents of the file.                                         |
+
+After you have correctly opened the file, you can use the following methods, named by analogy with the other designed for reading.
+
+| Data type     | Method                                | Example                                           | Notes                                                                                                                                                                                                                 |
+|---------------|---------------------------------------|---------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **bit**       | `writeBit($bit)`                      | `$s->writeBit(true);`                             |                                                                                                                                                                                                                       |
+|               | `writeBits(array $bits)`              | `$s->writeBits([true, false, [2, 2], [4, 10]]);`  | You can combine multiple bits into a single number. To do this, instead of using an array of boolean, in which the first element is the number of bits is used to record the number, and the second element - number. |
+| **char**      | `writeChar($char)`                    | `$s->writeChar(32);`                              | You can pass a character (string), and the code for this symbol (an integer up to 256).                                                                                                                               |
+| **integer**   | `writeInteger($integer, $sizeInBits)` | `$s->writeInteger(256, 32);`                      | It supports the following dimensions: 16, 32, 64 bits.                                                                                                                                                                |
+| **float**     | `writeFloat($float, $sizeInBits)`     | `$s->writeFloat(123.123, 32);`                    | It supports the following dimensions: 32, 64 bits.                                                                                                                                                                    |
+| **string**    | `writeString($string)`                | `$s->writeString('Abracadabra');`                 |                                                                                                                                                                                                                       |
