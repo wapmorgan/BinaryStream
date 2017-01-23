@@ -6,7 +6,7 @@ BinaryStream - a handy tool for working with binary data.
 [![Latest Stable Version](https://poser.pugx.org/wapmorgan/binary-stream/version)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Unstable Version](https://poser.pugx.org/wapmorgan/binary-stream/v/unstable)](//packagist.org/packages/wapmorgan/binary-stream)
 
-If you are looking for a tool that would allow convenient to read and write binary data (whether existing or created format you), you choose the correct library.
+If you are looking for a convenient tool that would allow read and write binary data (whether existing or created by you format), you choose the correct library.
 
 _BinaryStream_ - is a powerful tool for reading and writing binary files. It supports a variety of high-level data types and sometimes lets you forget that you are working with unstructured binary data.
 
@@ -17,13 +17,13 @@ _BinaryStream_ - is a powerful tool for reading and writing binary files. It sup
 
 ## Features
 * The library supports all major data types and allows both read and write the data.
-* Supports both endian (big endian), and reverse (little). You can switch between them when reading a single file.
+* Supports both direct order of bytes (big endian) and reverse (little). You can switch between them while reading a file.
 * Supports multiple dimensions of **numbers** (16, 32 and 64).
 * Supports multiple dimensions of **fractional numbers** (32 and 64).
 * You can read both individual bytes and individual bits.
-* For ease of navigation through the file, you can specify BinaryStream remember some items in the file, to later return to them again.
-* If the file saved similar groups of data (eg, titles or frames), you can save the settings one-time group, and then use only the name of the group to read all the data.
-* If you plan to work with different file formats, you can save the entire configuration (which is the byte order, and all the groups of fields).
+* For ease of navigation through the file, you can specify BinaryStream remember some positions in the file, and later return to them again.
+* If in the file stored similar groups of data (eg, titles or frames), you can save the settings group once, and then use only the name of the group to read all the data.
+* If you plan to work with different file formats, you can save the entire configuration (which is the byte order and all the groups of fields).
 
 ## Manual
 ### Simple usage
@@ -115,6 +115,11 @@ if ($stream->compare(3, 'ASC')) {
         // Some operations with data
     }
 }
+```
+### Installation
+Installation via composer:
+```sh
+composer require wapmorgan/cam
 ```
 
 ## Reference
