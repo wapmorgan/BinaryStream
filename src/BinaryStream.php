@@ -397,7 +397,6 @@ class BinaryStream {
         $this->cache[$this->offset] = ($this->cache[$this->offset] << 1) + (int)$bit;
 
         if ($this->bitOffset == 8) {
-            var_dump($this->cache[$this->offset]);
             fwrite($this->fp, chr($this->cache[$this->offset]));
             $this->bitOffset = 0;
             $this->offset++;
