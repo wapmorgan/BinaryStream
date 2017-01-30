@@ -1,9 +1,8 @@
 <?php
 require __DIR__.'/../vendor/autoload.php';
-use PHPUnit\Framework\TestCase;
 use wapmorgan\BinaryStream\BinaryStream;
 
-class ReaderTest extends TestCase {
+class ReaderTest extends PHPUnit_Framework_TestCase {
     public function createStream($data) {
         $fp = fopen('php://memory', 'wb');
         fwrite($fp, $data);
