@@ -162,6 +162,12 @@ To change the position of the cursor in the file use the following methods.
 | `go($mark)`    | `$stream->go('FirstTag');` | It moves to the position where the `$mark` mark has been set.                                                                                                 |
 | `skip($bytes)` | `$stream->skip(4);`        | Skip the following `$bytes` bytes.                                                                                                                            |
 
+To test if cursor reached file end, use the `isEnd` method().
+```php
+isEnd()
+```
+Returns **true** if cursor is at the end of file.
+
 To set the a mark or check whether the mark with the specified name is set, use these methods:
 
 | Method                       | Usage                              | Notes                                                              |

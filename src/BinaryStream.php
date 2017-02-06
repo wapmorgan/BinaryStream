@@ -328,6 +328,10 @@ class BinaryStream {
         return isset($this->marks[$name]);
     }
 
+    public function isEnd() {
+        return feof($this->fp);
+    }
+
     public function skip($bytes) {
         if (fseek($this->fp, $bytes, SEEK_CUR))
             $this->offset += $bytes;
