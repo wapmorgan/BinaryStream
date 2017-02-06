@@ -374,6 +374,12 @@ class BinaryStream {
     public function compare($sizeInBytes, $bytes) {
         $data = fread($this->fp, $sizeInBytes);
         fseek($this->fp, -$sizeInBytes, SEEK_CUR);
+        if (is_array($bytes)) {
+            $source = $bytes;
+            $bytes = null;
+            foreach ($source as $byte)
+                $bytes .= is_int($byte) ? chr($byte) : $byte;
+        }
         return ($data === $bytes);
     }
 

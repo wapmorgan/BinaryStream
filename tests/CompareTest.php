@@ -23,4 +23,15 @@ class CompareTest extends PHPUnit_Framework_TestCase {
         $this->assertFalse($s->compare(7, 'Called'));
         $this->assertTrue($s->compare(6, 'Called'));
     }
+
+    public function testCompareBinary() {
+        $s = new BinaryStream($this->createStream(pack('H*', '3026B27511')));
+        $this->assertFalse($s->compare(4, array(0x00, 0x00, 0x00, 0x00)));
+        $this->assertFalse($s->compare(3, array(0x30, 0x26, 0xB2, 0x75)));
+        $this->assertFalse($s->compare(5, array(0x30, 0x26, 0xB2, 0x75)));
+        $this->assertTrue($s->compare(4, array(0x30, 0x26, 0xB2, 0x75)));
+
+        $s = new BinaryStream($this->createStream(pack('H*', '202020')));
+        $this->assertTrue($s->compare(3, array(0x20, 32, ' ')));
+    }
 }
