@@ -146,4 +146,24 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
             'd' => 1,
         ]));
     }
+
+    public function testAlignment() {
+        $s = new BinaryStream($this->createStream(pack('CV', 162, 2147483647)));
+        $this->assertEquals(array(
+            'flags' => 162,
+            'int' => 2147483647
+        ), $s->readGroup(array(
+            'flags' => 8,
+            'i:int' => 32,
+        )));
+
+        $s->go(0);
+        $this->assertEquals(array(
+            'flags' => 2,
+            'int' => 2147483647
+        ), $s->readGroup(array(
+            'flags' => 2,
+            'i:int' => 32,
+        )));
+    }
 }

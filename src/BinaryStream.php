@@ -146,6 +146,11 @@ class BinaryStream {
     }
 
     public function readInteger($sizeInBits = 32) {
+        if ($this->bitOffset > 0) {
+            $this->bitOffset = 0;
+            $this->offset++;
+        }
+
         if ($sizeInBits >= 16 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
             $bytes = $sizeInBits / 8;
             $data = fread($this->fp, $bytes);
@@ -160,6 +165,11 @@ class BinaryStream {
     }
 
     public function readFloat($sizeInBits = 32) {
+        if ($this->bitOffset > 0) {
+            $this->bitOffset = 0;
+            $this->offset++;
+        }
+
         if ($sizeInBits == 32 || $sizeInBits == 64) {
             $bytes = $sizeInBits / 8;
             $data = fread($this->fp, $bytes);
@@ -174,6 +184,11 @@ class BinaryStream {
     }
 
     public function readString($sizeInBytes = 1) {
+        if ($this->bitOffset > 0) {
+            $this->bitOffset = 0;
+            $this->offset++;
+        }
+
         $data = fread($this->fp, $sizeInBytes);
         if ($data !== false)
             $this->offset += $sizeInBytes;
@@ -248,7 +263,7 @@ class BinaryStream {
                     break;
 
                 case 'string':
-                    if ($bitOffset != 0) {
+                    if ($bitOffset > 0) {
                         $bitOffset = 0;
                         $offset++;
                     }
@@ -261,6 +276,11 @@ class BinaryStream {
                     break;
 
                 case 'integer':
+                    if ($bitOffset > 0) {
+                        $bitOffset = 0;
+                        $offset++;
+                    }
+
                     if ($field_size_in_bits >= 16 && $field_size_in_bits <= 64 && $field_size_in_bits % 8 == 0) {
                         $bytes = $field_size_in_bits / 8;
                         $data = null;
@@ -275,6 +295,11 @@ class BinaryStream {
                     break;
 
                 case 'float':
+                    if ($bitOffset > 0) {
+                        $bitOffset = 0;
+                        $offset++;
+                    }
+
                     if ($field_size_in_bits == 32 || $field_size_in_bits == 64) {
                         $bytes = $field_size_in_bits / 8;
                         $data = null;
@@ -292,6 +317,11 @@ class BinaryStream {
                     break;
 
                 case 'char':
+                    if ($bitOffset > 0) {
+                        $bitOffset = 0;
+                        $offset++;
+                    }
+
                     if ($field_size_in_bits == 1) {
                         $data = $cache[$offset++];
                         $group[$field_name] = ord($data);
