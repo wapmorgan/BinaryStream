@@ -197,7 +197,7 @@ To save a group of data under one name, use `saveGroup()` method
 ```php
 saveGroup($name, array $fields)
 ```
-Create new group with few fields. If group with that name already exists, it replaces    .
+Create new group with few fields. If group with that name already exists, it replaces original group.
 
 Additional methods to work with configuration:
 
