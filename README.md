@@ -178,7 +178,7 @@ isEnd()
 ```
 Returns **true** if cursor is at the end of file.
 
-To set the a mark or check whether the mark with the specified name is set, use these methods:
+To set a mark or check whether the mark with the specified name is set, use these methods:
 
 | Method                       | Usage                              | Notes                                                              |
 |------------------------------|------------------------------------|--------------------------------------------------------------------|
