@@ -12,7 +12,6 @@ class BinaryStream {
     const APPEND = 4;
 
     protected $fp;
-    protected $isWritable = false;
     protected $offset = 0;
     protected $bitOffset = 0;
     protected $cache = array();
@@ -151,7 +150,7 @@ class BinaryStream {
             $this->offset++;
         }
 
-        if ($sizeInBits >= 16 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
+        if ($sizeInBits >= 8 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
             $bytes = $sizeInBits / 8;
             $data = fread($this->fp, $bytes);
             if ($data !== false)
@@ -159,8 +158,12 @@ class BinaryStream {
             else
                 $this->offset = ftell($this->fp);
 
-            $value = unpack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $data);
-            return $value[1];
+            if ($sizeInBits == 8)
+                return ord($data);
+            else {
+                $value = unpack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $data);
+                return $value[1];
+            }
         }
     }
 
@@ -281,7 +284,7 @@ class BinaryStream {
                         $offset++;
                     }
 
-                    if ($field_size_in_bits >= 16 && $field_size_in_bits <= 64 && $field_size_in_bits % 8 == 0) {
+                    if ($field_size_in_bits >= 8 && $field_size_in_bits <= 64 && $field_size_in_bits % 8 == 0) {
                         $bytes = $field_size_in_bits / 8;
                         $data = null;
                         for ($i = 0; $i < $bytes; $i++) {
@@ -289,8 +292,12 @@ class BinaryStream {
                             $offset++;
                         }
 
-                        $unpacked = unpack($this->types[$this->endian][$this->labels['integer'][$field_size_in_bits]], $data);
-                        $group[$field_name] = $unpacked[1];
+                        if ($field_size_in_bits == 8)
+                            $group[$field_name] = ord($data);
+                        else {
+                            $unpacked = unpack($this->types[$this->endian][$this->labels['integer'][$field_size_in_bits]], $data);
+                            $group[$field_name] = $unpacked[1];
+                        }
                     }
                     break;
 
@@ -322,9 +329,14 @@ class BinaryStream {
                         $offset++;
                     }
 
+                    $data = array();
+                    for ($i = 0; $i < $field_size_in_bits; $i++) {
+                        $data[$i] = $cache[$offset++];
+                    }
                     if ($field_size_in_bits == 1) {
-                        $data = $cache[$offset++];
-                        $group[$field_name] = ord($data);
+                        $group[$field_name] = $data[0];
+                    } else {
+                        $group[$field_name] = $data;
                     }
                     break;
             }
@@ -487,9 +499,12 @@ class BinaryStream {
         if ($this->mode == self::READ)
             throw new \Exception('This operation is not allowed in READ mode!');
 
-        if ($sizeInBits >= 16 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
+        if ($sizeInBits >= 8 && $sizeInBits <= 64 && $sizeInBits % 8 == 0) {
             $bytes = $sizeInBits / 8;
-            $data = pack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $integer);
+            if ($sizeInBits == 8)
+                $data = chr($integer);
+            else
+                $data = pack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $integer);
             if (fwrite($this->fp, $data)) {
                 $this->offset += $bytes;
             } else {
