@@ -180,11 +180,11 @@ Returns **true** if cursor is at the end of file.
 
 To set a mark or check whether the mark with the specified name is set, use these methods:
 
-| Method                       | Usage                              | Notes                                                              |
-|------------------------------|------------------------------------|--------------------------------------------------------------------|
-| `mark($name)`                | `$stream->mark('Tag');`            | It saves the current cursor position under the `$name` name.       |
-| `markOffset($offset, $name)` | `$stream->markOffset('FirstTag');` | It saves specific position in file under the `$name` name.         |
-| `isMarked($name)`            | `$stream->isMarked('Tag');`        | Check whether the `$name` mark set. Returns **true** or **false**. |
+| Method                       | Usage                                    | Notes                                                              |
+|------------------------------|------------------------------------------|--------------------------------------------------------------------|
+| `mark($name)`                | `$stream->mark('Tag');`                  | It saves the current cursor position under the `$name` name.       |
+| `markOffset($offset, $name)` | `$stream->markOffset(-128, 'FirstTag');` | It saves specific position in file under the `$name` name.         |
+| `isMarked($name)`            | `$stream->isMarked('Tag');`              | Check whether the `$name` mark set. Returns **true** or **false**. |
 
 To change the reading order of bytes using `setEndian($endian)` method with one of `BinaryStream` constants:
 

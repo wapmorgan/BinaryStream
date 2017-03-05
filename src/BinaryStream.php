@@ -357,7 +357,7 @@ class BinaryStream {
     public function go($offsetOrMark) {
         if (is_string($offsetOrMark)) {
             if (isset($this->marks[$offsetOrMark]))
-                fseek($this->fp, $this->marks[$offsetOrMark]);
+                $this->go($this->marks[$offsetOrMark]);
         } else {
             if ($offsetOrMark < 0)
                 fseek($this->fp, $offsetOrMark, SEEK_END);
