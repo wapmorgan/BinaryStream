@@ -219,6 +219,7 @@ class BinaryStream {
                     case 'i': $field_type = 'integer'; break;
                     case 'f': $field_type = 'float'; break;
                     case 'c': $field_type = 'char'; break;
+                    case 'b': $field_type = 'bit'; break;
                 }
                 $field_name = substr($field_name, strpos($field_name, ':') + 1);
             } else
@@ -244,6 +245,7 @@ class BinaryStream {
                     case 'i': $field_type = 'integer'; break;
                     case 'f': $field_type = 'float'; break;
                     case 'c': $field_type = 'char'; break;
+                    case 'b': $field_type = 'bit'; break;
                 }
                 $field_name = substr($field_name, strpos($field_name, ':') + 1);
             } else
