@@ -119,7 +119,7 @@ if ($stream->compare(3, 'ASC')) {
 ### Installation
 Installation via composer:
 ```sh
-composer require wapmorgan/cam
+composer require wapmorgan/binary-stream
 ```
 
 ## Reference
