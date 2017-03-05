@@ -10,13 +10,40 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
         return $fp;
     }
 
+    public function testGroup() {
+        $s = new BinaryStream($this->createStream(pack('CvVPCCC', 127, 65535, 65536, 65536, 127, 255, 0b10101101)));
+        $this->assertEquals(array(
+            'char-int' => 127,
+            'short' => 65535,
+            'int' => 65536,
+            'long' => 65536,
+            'chars' => array(chr(127), chr(255)),
+            'quadro' => 10,
+            'duet' => 3,
+            'bit_a' => false,
+            'bit_b' => true
+        ), $s->readGroup(array(
+            'i:char-int' => 8,
+            'i:short' => 16,
+            'i:int' => 32,
+            'i:long' => 64,
+            'c:chars' => 2,
+            'b:quadro' => 4,
+            'b:duet' => 2,
+            'b:bit_a' => 1,
+            'b:bit_b' => 1,
+        )));
+    }
+
     public function testInteger() {
-        $s = new BinaryStream($this->createStream(pack('nNJvVP', 65535, 65536, 65536, 65535, 65536, 65536)));
+        $s = new BinaryStream($this->createStream(pack('CnNJCvVP', 127, 65535, 65536, 65536, 127, 65535, 65536, 65536)));
         $s->setEndian(BinaryStream::BIG);
+        $this->assertEquals(127, $s->readInteger(8));
         $this->assertEquals(65535, $s->readInteger(16));
         $this->assertEquals(65536, $s->readInteger(32));
         $this->assertEquals(65536, $s->readInteger(64));
         $s->setEndian(BinaryStream::LITTLE);
+        $this->assertEquals(127, $s->readInteger(8));
         $this->assertEquals(65535, $s->readInteger(16));
         $this->assertEquals(65536, $s->readInteger(32));
         $this->assertEquals(65536, $s->readInteger(64));
@@ -24,23 +51,27 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
         $s->go(0);
         $s->setEndian(BinaryStream::BIG);
         $this->assertEquals([
-            'first' => 65535,
-            'second' => 65536,
+            'first' => 127,
+            'second' => 65535,
             'third' => 65536,
+            'fourth' => 65536,
         ], $s->readGroup([
-            'i:first' => 16,
-            'i:second' => 32,
-            'i:third' => 64,
+            'i:first' => 8,
+            'i:second' => 16,
+            'i:third' => 32,
+            'i:fourth' => 64,
         ]));
         $s->setEndian(BinaryStream::LITTLE);
         $this->assertEquals([
-            'first' => 65535,
-            'second' => 65536,
+            'first' => 127,
+            'second' => 65535,
             'third' => 65536,
+            'fourth' => 65536,
         ], $s->readGroup([
-            'i:first' => 16,
-            'i:second' => 32,
-            'i:third' => 64,
+            'i:first' => 8,
+            'i:second' => 16,
+            'i:third' => 32,
+            'i:fourth' => 64,
         ]));
     }
 

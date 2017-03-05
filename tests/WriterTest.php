@@ -14,25 +14,29 @@ class WriterTest extends PHPUnit_Framework_TestCase {
         $file = fopen('php://memory', 'w');
         $s = new BinaryStream($file, BinaryStream::CREATE);
         $s->setEndian(BinaryStream::BIG);
+        $s->writeInteger(127, 8);
         $s->writeInteger(65535, 16);
         $s->writeInteger(65536, 32);
         $s->writeInteger(65536, 64);
         $s->setEndian(BinaryStream::LITTLE);
+        $s->writeInteger(127, 8);
         $s->writeInteger(65535, 16);
         $s->writeInteger(65536, 32);
         $s->writeInteger(65536, 64);
 
         rewind($file);
         $this->assertEquals([
-            'a' => 65535,
-            'b' => 65536,
+            'a' => 127,
+            'b' => 65535,
             'c' => 65536,
-        ], unpack('na/Nb/Jc', fread($file, 14)));
+            'd' => 65536,
+        ], unpack('Ca/nb/Nc/Jd', fread($file, 15)));
         $this->assertEquals([
-            'a' => 65535,
-            'b' => 65536,
+            'a' => 127,
+            'b' => 65535,
             'c' => 65536,
-        ], unpack('va/Vb/Pc', fread($file, 14)));
+            'd' => 65536,
+        ], unpack('Ca/vb/Vc/Pd', fread($file, 15)));
     }
 
     public function testFloat() {
