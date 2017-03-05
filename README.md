@@ -128,6 +128,16 @@ Creating an object is possible in several ways:
 - `new BinaryStream(socket)` or
 - `new BinaryStream(stream)`
 
+All used data types are presented in the following table:
+
+| Type    | Dimensions      | Values range                                            |
+|---------|-----------------|---------------------------------------------------------|
+| integer | 8/16/32/64 bits | 0 to 255/65 535/4 294 967 295/9 223 372 036 854 775 807 |
+| float   | 32/64 bits      | 0 to 3.4 x 10^38/1.798 x 10^308                         |
+| char    | 1 byte          | From 0 to 255 ascii chars                               |
+| string  | [n] of bytes    | ...                                                     |
+| bit     | [n] of bits     | 0 or 1                                                  |
+
 Reading data is possible using specialized methods for each data type:
 
 | Data type     | Method                          | Return value         | Example                                                                                  | Notes                                                                                                |
