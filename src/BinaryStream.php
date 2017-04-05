@@ -164,7 +164,7 @@ class BinaryStream {
                 // handle 24, 40, 48 and 56 bytes integers (very rare case, but it happens)
                 $value = 0;
                 for ($i = 0; $i < $bytes; $i++) {
-                    $value = ($value << 8) + ord($data[ $this->endian == self::BIG ? $i : abs($i - $bytes) ]);
+                    $value = ($value << 8) + ord($data[ $this->endian == self::BIG ? $i : abs($i - $bytes + 1) ]);
                 }
                 return $value;
             } else {
