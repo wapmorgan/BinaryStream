@@ -188,7 +188,7 @@ To set a mark or check whether the mark with the specified name is set, use thes
 | `markOffset($offset, $name)` | `$stream->markOffset(-128, 'FirstTag');` | It saves specific position in file under the `$name` name.         |
 | `isMarked($name)`            | `$stream->isMarked('Tag');`              | Check whether the `$name` mark set. Returns **true** or **false**. |
 
-To change the reading order of bytes using `setEndian($endian)` method with one of `BinaryStream` constants:
+**By default, `BinaryStream` treats `int`'s and `long`'s in little-endian format**. To change the reading order of bytes use `setEndian($endian)` method with one of `BinaryStream` constants:
 
 | Constant             | Meaning                              |
 |----------------------|--------------------------------------|
