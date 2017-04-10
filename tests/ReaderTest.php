@@ -77,6 +77,12 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
 
     public function testFloat() {
         $s = new BinaryStream($this->createStream(pack('fd', 123.789, 654321.789)));
+        // check machine byte order
+        if (pack('S', 1) == 0x0001) // BIG ENDIAN
+            $s->setEndian(BinaryStream::BIG);
+        else
+            $s->setEndian(BinaryStream::LITTLE);
+
         $this->assertEquals(123.789, round($s->readFloat(32), 3));
         $this->assertEquals(654321.789, round($s->readFloat(64), 3));
 

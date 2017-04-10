@@ -20,12 +20,13 @@ With BinaryStream you can handle network packets, binary files, system protocols
 ## Features
 * The library supports all major data types and allows both read and write the data.
 * Supports both direct order of bytes (big endian) and reverse (little). You can switch between them while reading a file.
-* Supports multiple dimensions of **numbers** (8, 16, 32 and 64).
+* Supports multiple dimensions of **integers** (8, 16, 32 and 64) and also rare (24, 40, 48 and 56).
 * Supports multiple dimensions of **fractional numbers** (32 and 64).
 * You can read both individual bytes and individual bits.
 * For ease of navigation through the file, you can specify BinaryStream remember some positions in the file, and later return to them again.
 * If in the file stored similar groups of data (eg, titles or frames), you can save the settings group once, and then use only the name of the group to read all the data.
 * If you plan to work with different file formats, you can save the entire configuration (which is the byte order and all the groups of fields).
+* Unlike standard php functions, **BinaryStream allows you to work with fractional numbers written in both the direct order of bytes** (Big-Endian) **and the reverse one** (Little-Endian).
 
 ## Manual
 ### Simple usage

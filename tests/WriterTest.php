@@ -44,12 +44,17 @@ class WriterTest extends PHPUnit_Framework_TestCase {
         $s = new BinaryStream($file, BinaryStream::CREATE);
         $s->setEndian(BinaryStream::BIG);
         $s->writeFloat(123.789, 32);
+        $s->writeFloat(3523.12, 32);
+        $s->writeFloat(123.789, 64);
         $s->writeFloat(654321.789, 64);
 
-        rewind($file);
-        $actual = unpack('fa/db', fread($file, 12));
+        // rewind($file);
+        $s->go(0);
+        $actual = $s->readGroup(array('f:a' => 32, 'f:b' => 32, 'f:c' => 64, 'f:d' => 64));
         $this->assertEquals(123.789, round($actual['a'], 3));
-        $this->assertEquals(654321.789, $actual['b']);
+        $this->assertEquals(3523.12, round($actual['b'], 3));
+        $this->assertEquals(123.789, round($actual['c'], 3));
+        $this->assertEquals(654321.789, round($actual['d'], 3));
     }
 
     public function testChar() {

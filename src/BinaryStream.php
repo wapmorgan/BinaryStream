@@ -22,16 +22,12 @@ class BinaryStream {
             'short' => 'v',
             'integer' => 'V',
             'long' => 'P',
-            'float' => 'f',
-            'double' => 'd',
         ),
         'big' => array(
             'char' => 'C',
             'short' => 'n',
             'integer' => 'N',
             'long' => 'J',
-            'float' => 'f',
-            'double' => 'd',
         ),
     );
     protected $labels = array(
@@ -39,10 +35,6 @@ class BinaryStream {
             16 => 'short',
             32 => 'integer',
             64 => 'long',
-        ),
-        'float' => array(
-            32 => 'float',
-            64 => 'double',
         ),
         'char' => array(
             8 => 'char'
@@ -181,15 +173,19 @@ class BinaryStream {
         }
 
         if ($sizeInBits == 32 || $sizeInBits == 64) {
-            $bytes = $sizeInBits / 8;
-            $data = fread($this->fp, $bytes);
-            if ($data !== false)
-                $this->offset += $bytes;
-            else
-                $this->offset = ftell($this->fp);
+            $bytesCount = $sizeInBits / 8;
+            for ($i = 0; $i < $bytesCount; $i++) {
+                $bytes[$i] = fgetc($this->fp);
+                if ($bytes[$i] !== false)
+                    $this->offset++;
+                else
+                    $this->offset = ftell($this->fp);
+            }
 
-            $value = unpack($this->types[$this->endian][$this->labels['float'][$sizeInBits]], $data);
-            return $value[1];
+            // $value = unpack($this->types[$this->endian][$this->labels['float'][$sizeInBits]], $data);
+            // return $value[1];
+
+            return $this->unpackFloat($bytes);
         }
     }
 
@@ -318,17 +314,13 @@ class BinaryStream {
 
                     if ($field_size_in_bits == 32 || $field_size_in_bits == 64) {
                         $bytes = $field_size_in_bits / 8;
-                        $data = null;
+                        $data = array();
                         for ($i = 0; $i < $bytes; $i++) {
-                            $data .= $cache[$offset];
+                            $data[$i] = $cache[$offset];
                             $offset++;
                         }
 
-                        $unpacked = unpack($this->types[$this->endian][$this->labels['float'][$field_size_in_bits]], $data);
-                        // if ($unpacked[1] >> ($field_size_in_bits - 1) == 1)
-                        //     $group[$field_name] = -($unpacked[1] ^ bindec('1'.str_repeat('0', $field_size_in_bits - 1)));
-                        // else
-                            $group[$field_name] = $unpacked[1];
+                        $group[$field_name] = $this->unpackFloat($data);
                     }
                     break;
 
@@ -528,7 +520,7 @@ class BinaryStream {
 
         if ($sizeInBits == 32 || $sizeInBits == 64) {
             $bytes = $sizeInBits / 8;
-            $data = pack($this->types[$this->endian][$this->labels['float'][$sizeInBits]], $float);
+            $data = implode(null, $this->packFloat($float, $bytes));
             if (fwrite($this->fp, $data)) {
                 $this->offset += $bytes;
             } else {
@@ -555,5 +547,141 @@ class BinaryStream {
             $this->offset += strlen($string);
         else
             $this->offset = ftell($this->fp);
+    }
+
+    /**
+     * Unpacks float (4 bytes) or double (8 bytes) from bytes. Takes into account current endianness settings.
+     * @param array $bytes Array of bytes. Should contain 4 or 8 elements.
+     */
+    protected function unpackFloat(array $bytes) {
+        // own unpacker
+        $bytesCount = count($bytes);
+        // deal with endianness
+        if ($this->endian == self::LITTLE) $bytes = array_reverse($bytes);
+        // unpack exponent
+        $sign = (ord($bytes[0]) & 0x80) > 0;
+
+        if ($bytesCount == 4) // for 32 bit exponent size is 8 bits
+            $exponent = pow(2, ((ord($bytes[0]) & 0x7F) << 1) + ((ord($bytes[1]) & 0x80) >> 7) - 127);
+        else // for 64 bit exponent size is 11 bits
+            $exponent = pow(2, ((ord($bytes[0]) & 0x7F) << 4) + ((ord($bytes[1]) & 0xF0) >> 4) - 1023);
+
+        $fraction = 1.0;
+        $i = 1;
+
+        for ($b = 1; $b < $bytesCount; $b++) {
+            $byte = ord($bytes[$b]);
+
+            for ($j = 0; $j < 8; $j++) {
+                // skip first N bits of byte used for exponent
+                if ($b == 1) {
+                    if (($bytesCount == 4 && $j == 0) || ($bytesCount == 8 && $j <= 3))
+                    continue;
+                }
+
+                if ((($byte >> (7 - $j)) & 1) == 1) {
+                    $fraction += pow(2, -$i);
+                }
+                $i++;
+            }
+        }
+        return ($sign ? -1 : 1) * $fraction * $exponent;
+    }
+
+    /**
+     * Packs float (4 bytes) or double (8 bytes) into bytes.
+     * @param float|double $float Float value
+     * @param int $sizeInBytes 4 or 8
+     */
+    protected function packFloat($float, $sizeInBytes) {
+        // unpack exponent
+        $sign = $float < 0 ? true : false;
+        $float = abs($float);
+
+        if ($sizeInBytes == 4) { // for 32 bit exponent size is 8 bits
+            $exponentBits = 8;
+            $exponentBase = 127;
+        }
+        else { // for 64 bit exponent size is 11 bits
+            $exponentBits = 11;
+            $exponentBase = 1023;
+        }
+        $exponentRange = 2 << $exponentBits;
+
+        $decimal = floor($float);
+
+        if ($float > 1) {
+            for ($i = 0; $i < $exponentRange; $i++) {
+                if (pow(2, $i) > $decimal) {
+                    $exponent = $exponentBase + ($i - 1);
+                    break;
+                }
+            }
+        } else {
+            for ($i = 0; $i < $exponentRange; $i++) {
+                if (pow(2, -$i) > $decimal) {
+                    $exponent = $exponentBase - $i + 1;
+                    break;
+                }
+            }
+        }
+
+        if ($sizeInBytes == 4) {
+            $bytes = array(
+                (($sign ? 1 : 0) << 7) + (($exponent & 0xFE) >> 1),
+                ($exponent & 0x01) << 7,
+                0,
+                0,
+            );
+        } else {
+            $bytes = array(
+                (($sign ? 1 : 0) << 7) + (($exponent & 0x7F0) >> 4),
+                ($exponent & 0xF) << 4,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+            );
+        }
+
+        $fraction = ($float - pow(2, $exponent - $exponentBase)) / pow(2, $exponent - $exponentBase);
+
+        $i = 1;
+        for ($b = 1; $b < $sizeInBytes; $b++) {
+            for ($j = 0; $j < 8; $j++) {
+                // skip first N bits of byte used for exponent
+                if ($b == 1) {
+                    if (($sizeInBytes == 4 && $j == 0) || ($sizeInBytes == 8 && $j <= 3))
+                    continue;
+                }
+
+                if ($fraction > pow(2, -$i)) {
+                    // var_dump($b.'['.$j.']');
+                    $fraction -= pow(2, -$i);
+                    // var_dump($fraction);
+                    $bytes[$b] = (($bytes[$b] >> (7 - $j)) | 0x1) << (7 - $j);
+                }
+
+                $i++;
+            }
+        }
+
+        // add 1 to fraction. Don't know why, but this works fine
+        $bytes[$sizeInBytes - 1]++;
+        for ($b = ($sizeInBytes - 1); $b >= 1; $b--) {
+            if ($bytes[$b] > 255) {
+                $bytes[$b] = 0;
+                $bytes[$b-1]++;
+            }
+        }
+
+        // deal with endianness
+        if ($this->endian == self::LITTLE) $bytes = array_reverse($bytes);
+
+        // var_dump(implode(null, array_map(function ($val) { return str_pad(decbin($val), 8, '0', STR_PAD_LEFT).PHP_EOL; }, $bytes)));
+        // var_dump(implode(null, array_map(function ($val) { return dechex($val); }, $bytes)));
+        return array_map('chr', $bytes);
     }
 }
