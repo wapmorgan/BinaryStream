@@ -11,7 +11,7 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testGroup() {
-        $s = new BinaryStream($this->createStream(pack('CvVPCCCCCC', 127, 65535, 65536, 65536, 127, 255, 0b10101101, 255, 255, 255)));
+        $s = new BinaryStream($this->createStream(pack('CvVNNCCCCCC', 127, 65535, 65536, /*64-bit int Little-Endian: start*/256, 0 /*64-bit integer Little-Endian: end*/, 127, 255, 0b10101101, 255, 255, 255)));
         $this->assertEquals(array(
             'char-int' => 127,
             'short' => 65535,
@@ -38,7 +38,7 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testInteger() {
-        $s = new BinaryStream($this->createStream(pack('CnNJCvVP', 127, 65535, 65536, 65536, 127, 65535, 65536, 65536)));
+        $s = new BinaryStream($this->createStream(pack('CnNNNCvVNN', 127, 65535, 65536, /*64-bit integer: start*/0, 65536/*64-bit integer: end*/, 127, 65535, 65536, /*64-bit int Little-Endian: start*/256, 0 /*64-bit integer Little-Endian: end*/)));
         $s->setEndian(BinaryStream::BIG);
         $this->assertEquals(127, $s->readInteger(8));
         $this->assertEquals(65535, $s->readInteger(16));
