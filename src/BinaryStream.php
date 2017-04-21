@@ -512,8 +512,18 @@ class BinaryStream {
             $bytes = $sizeInBits / 8;
             if ($sizeInBits == 8)
                 $data = chr($integer);
+            // handle 24, 40, 48 and 56 bits integers (very rare case, but it happens).
+            // also, handle 64-bit integer on PHP < 5.6.3
+            else if ($sizeInBits % 16 == 8 || ($sizeInBits == 64 && version_compare(PHP_VERSION, '5.6.3', '<'))) {
+                $data = null;
+                for ($i = 0; $i < $bytes; $i++) {
+                    //$value = ($value << 8) + ord($data[ $this->endian == self::BIG ? $i : abs($i - $bytes + 1) ]);
+                    $data .= chr(($integer >> (8 * ($this->endian == self::BIG ? $bytes - $i - 1 : $i))) & 255);
+                }
+            }
             else
                 $data = pack($this->types[$this->endian][$this->labels['integer'][$sizeInBits]], $integer);
+
             if (fwrite($this->fp, $data)) {
                 $this->offset += $bytes;
             } else {

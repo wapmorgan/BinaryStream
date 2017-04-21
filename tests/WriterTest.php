@@ -23,20 +23,26 @@ class WriterTest extends PHPUnit_Framework_TestCase {
         $s->writeInteger(65535, 16);
         $s->writeInteger(65536, 32);
         $s->writeInteger(65536, 64);
+        $s->writeInteger(16777215, 24);
 
         rewind($file);
         $this->assertEquals([
             'a' => 127,
             'b' => 65535,
             'c' => 65536,
-            'd' => 65536,
-        ], unpack('Ca/nb/Nc/Jd', fread($file, 15)));
+            'd' => 0,     // first part of 64-bit integer
+            'e' => 65536, // second part of 64-bit integer
+        ], unpack('Ca/nb/Nc/Nd/Ne', fread($file, 15)));
         $this->assertEquals([
             'a' => 127,
             'b' => 65535,
             'c' => 65536,
-            'd' => 65536,
-        ], unpack('Ca/vb/Vc/Pd', fread($file, 15)));
+            'd' => 256, // first part of 64-bit integer
+            'e' => 0,   // second part of 64-bit integer
+            'f' => 255, // first byte of 24-bit integer
+            'g' => 255, // second byte of 24-bit integer
+            'h' => 255, // third byte of 24-bit integer
+        ], unpack('Ca/vb/Vc/Nd/Ne/Cf/Cg/Ch', fread($file, 18)));
     }
 
     public function testFloat() {
