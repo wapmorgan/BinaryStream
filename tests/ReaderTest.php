@@ -11,7 +11,7 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testGroup() {
-        $s = new BinaryStream($this->createStream(pack('CvVPCCC', 127, 65535, 65536, 65536, 127, 255, 0b10101101)));
+        $s = new BinaryStream($this->createStream(pack('CvVPCCCCCC', 127, 65535, 65536, 65536, 127, 255, 0b10101101, 255, 255, 255)));
         $this->assertEquals(array(
             'char-int' => 127,
             'short' => 65535,
@@ -21,7 +21,8 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
             'quadro' => 10,
             'duet' => 3,
             'bit_a' => false,
-            'bit_b' => true
+            'bit_b' => true,
+            'rare_int' => 16777215,
         ), $s->readGroup(array(
             'i:char-int' => 8,
             'i:short' => 16,
@@ -32,6 +33,7 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
             'b:duet' => 2,
             'b:bit_a' => 1,
             'b:bit_b' => 1,
+            'i:rare_int' => 24,
         )));
     }
 

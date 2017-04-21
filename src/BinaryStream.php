@@ -152,8 +152,9 @@ class BinaryStream {
 
             if ($sizeInBits == 8)
                 return ord($data);
-            else if ($sizeInBits % 16 == 8) {
-                // handle 24, 40, 48 and 56 bytes integers (very rare case, but it happens)
+            // handle 24, 40, 48 and 56 bits integers (very rare case, but it happens).
+            // also, handle 64-bit integer on PHP < 5.6.3
+            else if ($sizeInBits % 16 == 8 || ($sizeInBits == 64 && version_compare(PHP_VERSION, '5.6.3', '<'))) {
                 $value = 0;
                 for ($i = 0; $i < $bytes; $i++) {
                     $value = ($value << 8) + ord($data[ $this->endian == self::BIG ? $i : abs($i - $bytes + 1) ]);
@@ -296,10 +297,17 @@ class BinaryStream {
                             $data .= $cache[$offset];
                             $offset++;
                         }
-
                         if ($field_size_in_bits == 8)
                             $group[$field_name] = ord($data);
-                        else {
+                        // handle 24, 40, 48 and 56 bits integers (very rare case, but it happens).
+                        // also, handle 64-bit integer on PHP < 5.6.3
+                        else if ($field_size_in_bits % 16 == 8 || ($field_size_in_bits == 64 && version_compare(PHP_VERSION, '5.6.3', '<'))) {
+                            $value = 0;
+                            for ($i = 0; $i < $bytes; $i++) {
+                                $value = ($value << 8) + ord($data[ $this->endian == self::BIG ? $i : abs($i - $bytes + 1) ]);
+                            }
+                            $group[$field_name] = $value;
+                        } else {
                             $unpacked = unpack($this->types[$this->endian][$this->labels['integer'][$field_size_in_bits]], $data);
                             $group[$field_name] = $unpacked[1];
                         }
