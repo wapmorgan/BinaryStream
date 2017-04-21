@@ -26,8 +26,8 @@ With BinaryStream you can handle network packets, binary files, system protocols
 * For ease of navigation through the file, you can specify BinaryStream remember some positions in the file, and later return to them again.
 * If in the file stored similar groups of data (eg, titles or frames), you can save the settings group once, and then use only the name of the group to read all the data.
 * If you plan to work with different file formats, you can save the entire configuration (which is the byte order and all the groups of fields).
-* Unlike standard php functions, it can work with fractional numbers written in both the direct order of bytes (Big-Endian) and the reverse one (Little-Endian).
-* Minimal supported PHP version is 5.3.0 (supports all features).
+* Unlike standard php functions, **it can work with fractional numbers written in both the direct order of bytes (Big-Endian) and the reverse one (Little-Endian)**.
+* Minimal supported **PHP version is 5.3.0** (supports all features).
 
 ## Manual
 ### Simple usage
