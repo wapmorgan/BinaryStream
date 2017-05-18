@@ -140,6 +140,7 @@ composer require wapmorgan/binary-stream
 ### Data types
 
 All used data types are presented in the following table:
+
 | Type    | Dimensions      | Values range                                            | Notes |
 |---------|-----------------|---------------------------------------------------------|-------|
 | integer | 8/16/32/64 bits | 0 to 255/65 535/4 294 967 295/9 223 372 036 854 775 807 | Also, there's support for non-standard sizes like 24, 40, 48 and 56 bits. |
@@ -155,30 +156,37 @@ All used data types are presented in the following table:
 - Reading data is possible using specialized methods for each data type:
     - **bit**:  
         - `readBit(): boolean`
+        
             Example: 
             `$flag = $s->readBit();`
         - `readBits(array $listOfBits): array of boolean and integers`.
+        
             Example: 
             `$flags = $s->readBits(['a' => 2, '_' => 5, 'b' => 3]);`
             If size of field (an array element value is `1`, then this field will have `true/false`, if larger 1, then `N` consecutive bits will be combined in an `integer`.)
     - **char**: 
         - `readChar(): string(1)`
+        
             Example:
             `$char = $s->readChar(); `
         - `readChar($count): array of string(1)`
+        
             Example: `$chars = $s->readChar(4);`
     - **integer**
         - `readInteger($sizeInBits = 32): integer`
+        
             Example:
             `$int = $s->readInteger(32); `
             It supports the following dimensions: 8, 16, 32, 64 and 24, 40, 48, 56 bits.
     - **float**:
         - `readFloat($sizeInBits = 32): float`
+        
             Example:
             `$float = $s->readFloat(32);`
             It supports the following dimensions: 32, 64 bits.
     - **string**:
         - `readString($length): string($length)`
+        
             Example: 
             `$string = $s->readString(10);`
 
