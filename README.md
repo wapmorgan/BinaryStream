@@ -40,7 +40,14 @@ $text = $s->readString(20);
 ```
 This example reads 20 bytes at the beginning of the file as a string.
 
-A more complex example, where the data were located in the following order: **integer** (int, 32 bit), **fractional** (float, 32 bit), a **flag byte** (where each bit has its own value, 8 bits): 1 bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: `0b00` - means that after recorded 1 character (char, 8 bits), `0b01` - means that after the written 10 characters (string, 10 bytes), `0b10` - means that followed in time unixtime format packaged in long integer (long, 64 bits), `0b11` - not used at this moment. 
+A more complex example, where the data were located in the following order: 
+- **integer** (int, 32 bit)
+- **float** (float, 32 bit)
+- **flag byte** (where each bit has its own value, 8 bits): first bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: 
+    - `0b00` - after this data recorded 1 character (char, 8 bits)
+    - `0b01` - after this data recorded 10 characters (string, 10 bytes)
+    - `0b10` - after this data time in unixtime format packaged in long integer (long, 64 bits)
+    - `0b11` - not used at this moment. 
 
 In order to read these data and those that depend on the flags, this example is suitable:
 ```php
@@ -99,7 +106,7 @@ $stream->saveGroup('Data', [
 do {
     $data = $stream->readGroup('Data');
     // Some operations with data
-while ($data['data_type'] != 0b11);
+} while ($data['data_type'] != 0b11);
 ```
 And now imagine that we have moved to a new file format that is different from the previous one and has a certain mark in the beginning of the file, which will help to distinguish the new from the old format. For example, a new label is a sequence of characters `'A', 'S', 'C'`. We need to check the label and if it is present, parse the file according to another scheme, and if it does not, use the old version of the processor. An example to illustrate this:
 ```php
