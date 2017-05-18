@@ -197,14 +197,21 @@ All used data types are presented in the following table:
 | `readGroup($name)`         | `$data = $s->readGroup('data');`                            | It allows you to read data from pre-saved configuration. To save a group under a new name, use the method `saveGroup($name, array $fields)`                                                                                                                                                                                                                                           |   |
 | `readGroup(array $fields)` | `$data = $s->readGroup(['i:field' => 32, 's:text' => 20]);` | The fields are listed in the as array in which the keys determine the type and the name of the data fields, and values - dimension (understood as bytes for string and chars, and as bits for everything else). Supported: `s`, `c`, `i`, `f` and `b`. If the type is not specified, the field is perceived as a bit (or a few bits). The type and name are separated by a colon (:). |   |
 
+- To save a group of data under one name, use `saveGroup()` method
+    ```php
+    saveGroup($name, array $fields)
+    ```
+    Create new group with few fields. If group with that name already exists, it replaces original group.
 
-To see if following bytes match a particular pattern, use the `compare()` method.
-```php
-compare($length, $bytes)
-```
-Compares `$length` bytes from current position with `$bytes`. Carrent position will not be changed. Returns **true** or **false**.
 
-To change the position of the cursor in the file use the following methods.
+- Comparation of bytes:
+    ```php
+    compare($length, $bytes)
+    ```
+    Compares `$length` bytes from current position with `$bytes`. Carrent position will not be changed. Returns **true** or **false**.
+
+- Caret moving:
+    To change the position of the cursor in the file use the following methods.
 
 | Method         | Usage                      | Notes                                                                                                                                                         |
 |----------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -212,13 +219,13 @@ To change the position of the cursor in the file use the following methods.
 | `go($mark)`    | `$stream->go('FirstTag');` | It moves to the position where the `$mark` mark has been set.                                                                                                 |
 | `skip($bytes)` | `$stream->skip(4);`        | Skip the following `$bytes` bytes.                                                                                                                            |
 
-To test if cursor reached file end, use the `isEnd` method().
-```php
-isEnd()
-```
-Returns **true** if cursor is at the end of file.
+- Current position testing:
+    ```php
+    isEnd(): boolean
+    ```
+    Returns **true** if cursor is at the end of file.
 
-To set a mark or check whether the mark with the specified name is set, use these methods:
+- Remembering the positions in file:
 
 | Method                       | Usage                                    | Notes                                                              |
 |------------------------------|------------------------------------------|--------------------------------------------------------------------|
@@ -226,20 +233,15 @@ To set a mark or check whether the mark with the specified name is set, use thes
 | `markOffset($offset, $name)` | `$stream->markOffset(-128, 'FirstTag');` | It saves specific position in file under the `$name` name.         |
 | `isMarked($name)`            | `$stream->isMarked('Tag');`              | Check whether the `$name` mark set. Returns **true** or **false**. |
 
-**By default, `BinaryStream` treats `int`'s and `long`'s in little-endian format**. To change the reading order of bytes use `setEndian($endian)` method with one of `BinaryStream` constants:
+- Endianness: 
+    **By default, `BinaryStream` treats `int`'s and `long`'s in little-endian format**. To change the reading order of bytes use `setEndian($endian)` method with one of `BinaryStream` constants:
 
 | Constant             | Meaning                              |
 |----------------------|--------------------------------------|
 | BinaryStream::BIG    | Big-endian for integers and floats   |
 | BinaryStream::LITTLE | Little-endian for integers and float |
 
-To save a group of data under one name, use `saveGroup()` method
-```php
-saveGroup($name, array $fields)
-```
-Create new group with few fields. If group with that name already exists, it replaces original group.
-
-Additional methods to work with configuration:
+- Configurations:
 
 | Method                     | Usage                                             | Notes                                                                                                                                                                                                 |
 |----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
