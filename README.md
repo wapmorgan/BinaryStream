@@ -137,11 +137,9 @@ composer require wapmorgan/binary-stream
 ```
 
 ## Reference
-Creating an object is possible in several ways:
-- `new BinaryStream($filename | $socket | $stream)` or
+### Data types
 
 All used data types are presented in the following table:
-
 | Type    | Dimensions      | Values range                                            | Notes |
 |---------|-----------------|---------------------------------------------------------|-------|
 | integer | 8/16/32/64 bits | 0 to 255/65 535/4 294 967 295/9 223 372 036 854 775 807 | Also, there's support for non-standard sizes like 24, 40, 48 and 56 bits. |
@@ -150,19 +148,41 @@ All used data types are presented in the following table:
 | string  | [n] of bytes    | ...                                                     | - |
 | bit     | [n] of bits     | 0 or 1                                                  | Also, there's support for combining few consecutive bits in one value. |
 
-Reading data is possible using specialized methods for each data type:
+### API
+- Creating an object is possible in several ways:
+    `new BinaryStream($filename | $socket | $stream)`
 
-| Data type     | Method                          | Return value                  | Example                                                                                  | Notes                                                                                                |
-|---------------|---------------------------------|-------------------------------|------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| **bit**       | `readBit()`                     | _boolean_                     | `$flag = $s->readBit();`                                   | You can specify the number of bits to read in `readBits()` as a one number, for that specify the number bits after the field name. |
-|               | `readBits(array $listOfBits)`   | array of _boolean_/_integers_ | `$flags = $s->readBits(['a' => 2, '_' => 5, 'b' => 3]); `  |  If size of field (an array element value is `1`, then this field will have `true/false`, if larger 1, then `N` consecutive bits will be combined in an `integer`.) |
-| **char**      | `readChar()`          | _string(1)_                   | `$char = $s->readChar(); `                                 |                                                                                                                                    |
-|               | `readChar($count)` | array of _string(1)_          | `$chars = $s->readChar(4);`                                |                                                                                                                                    |
-| **integer**   | `readInteger($sizeInBits = 32)` | _int_                         | `$int = $s->readInteger(32); `                             | It supports the following dimensions: 8, 16, 32, 64 bits.                                                                          |
-| **float**     | `readFloat($sizeInBits = 32)`   | _float_                       | `$float = $s->readFloat(32); `                             | It supports the following dimensions: 32, 64 bits.                                                                                 |
-| **string**    | `readString($length)`           | _string($length)_             | `$string = $s->readString(10); `                           |                                                                                                                                    |
+- Reading data is possible using specialized methods for each data type:
+    - **bit**:  
+        - `readBit(): boolean`
+            Example: 
+            `$flag = $s->readBit();`
+        - `readBits(array $listOfBits): array of boolean and integers`.
+            Example: 
+            `$flags = $s->readBits(['a' => 2, '_' => 5, 'b' => 3]);`
+            If size of field (an array element value is `1`, then this field will have `true/false`, if larger 1, then `N` consecutive bits will be combined in an `integer`.)
+    - **char**: 
+        - `readChar(): string(1)`
+            Example:
+            `$char = $s->readChar(); `
+        - `readChar($count): array of string(1)`
+            Example: `$chars = $s->readChar(4);`
+    - **integer**
+        - `readInteger($sizeInBits = 32): integer`
+            Example:
+            `$int = $s->readInteger(32); `
+            It supports the following dimensions: 8, 16, 32, 64 and 24, 40, 48, 56 bits.
+    - **float**:
+        - `readFloat($sizeInBits = 32): float`
+            Example:
+            `$float = $s->readFloat(32);`
+            It supports the following dimensions: 32, 64 bits.
+    - **string**:
+        - `readString($length): string($length)`
+            Example: 
+            `$string = $s->readString(10);`
 
-or by using general methods:
+- Reading of data groups:
 
 | Method                     | Usage                                                       | Notes                                                                                                                                                                                                                                                                                                                                                                                 |   |
 |----------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|
