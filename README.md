@@ -40,7 +40,9 @@ $text = $s->readString(20);
 ```
 This example reads 20 bytes at the beginning of the file as a string.
 
-A more complex example, where the data were located in the following order: **integer** (int, 32 Bit), **fractional** (float, 32 bits), a **flag byte** (where each bit has its own value, 8 bits): 1 bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: `00` - means that after recorded 1 character (char, 8 bits), 01 - means that after the written 10 characters (string, 10 bytes), `10` - means that followed in time unixtime format packaged in long integer (long, 64 bits), `11` - not used. In order to read these data and those that depend on the flags, this example is suitable:
+A more complex example, where the data were located in the following order: **integer** (int, 32 bit), **fractional** (float, 32 bit), a **flag byte** (where each bit has its own value, 8 bits): 1 bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: `0b00` - means that after recorded 1 character (char, 8 bits), `0b01` - means that after the written 10 characters (string, 10 bytes), `0b10` - means that followed in time unixtime format packaged in long integer (long, 64 bits), `0b11` - not used at this moment. 
+
+In order to read these data and those that depend on the flags, this example is suitable:
 ```php
 use wapmorgan\BinaryStream\BinaryStream;
 $stream = new BinaryStream('filename.ext');
@@ -73,16 +75,16 @@ $data = $stream->readGroup([
     '_' => 5,
     'data_type' => 2,
 ]);
-if ($flags['additional_data']) {
-    if ($flags['data_type'] == 0b00)
+if ($data['additional_data']) {
+    if ($data['data_type'] == 0b00)
         $data['char'] = $stream->readChar();
-    else if ($flags['data_type'] == 0b01)
+    else if ($data['data_type'] == 0b01)
         $data['string'] = $stream->readString(10);
-    else if ($flags['data_type'] == 0b10)
+    else if ($data['data_type'] == 0b10)
         $data['time'] = date('r', $stream->readInteger(64));
 }
 ```
-If you are reading a file in which such groups of data are repeated, you can save a group with a name, and then simply refer to it to read the next data. Let us introduce one more value for data_type: `11` - means that this is the last group of data in the file. An example would be:
+If you are reading a file in which such groups of data are repeated, you can save a group with a name, and then simply refer to it to read the next data. Let us introduce one more value for data_type: `0b11` - means that this is the last group of data in the file. An example would be:
 ```php
 use wapmorgan\BinaryStream\BinaryStream;
 $stream = new BinaryStream('filename.ext');
@@ -94,12 +96,12 @@ $stream->saveGroup('Data', [
     'data_type' => 2,
 ]);
 
-while ($data['data_type'] != 0b11) {
+do {
     $data = $stream->readGroup('Data');
     // Some operations with data
-}
+while ($data['data_type'] != 0b11);
 ```
-And now imagine that we have moved to a new file format that is different from the previous one and has a certain mark in the beginning of the file, which will help to distinguish the new from the old format. For example, a new label is a sequence of characters 'A', 'S', 'C'. We need to check the label and if it is present, parse the file according to another scheme, and if it does not, use the old version of the processor. An example to illustrate this:
+And now imagine that we have moved to a new file format that is different from the previous one and has a certain mark in the beginning of the file, which will help to distinguish the new from the old format. For example, a new label is a sequence of characters `'A', 'S', 'C'`. We need to check the label and if it is present, parse the file according to another scheme, and if it does not, use the old version of the processor. An example to illustrate this:
 ```php
 use wapmorgan\BinaryStream\BinaryStream;
 $stream = new BinaryStream('filename.ext');
@@ -129,9 +131,7 @@ composer require wapmorgan/binary-stream
 
 ## Reference
 Creating an object is possible in several ways:
-- `new BinaryStream(filename)` or
-- `new BinaryStream(socket)` or
-- `new BinaryStream(stream)`
+- `new BinaryStream($filename | $socket | $stream)` or
 
 All used data types are presented in the following table:
 
