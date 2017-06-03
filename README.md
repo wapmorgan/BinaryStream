@@ -19,16 +19,24 @@ With BinaryStream you can handle network packets, binary files, system protocols
 4. [**Advanced usage. Writing**](#advaned-usage-writing)
 
 ## Features
+* Minimal supported **PHP version is 5.3.0** for all features.
 * The library supports all major data types and allows both read and write the data.
 * Supports both direct order of bytes (big endian) and reverse (little). You can switch between them while reading a file.
-* Supports multiple dimensions of **integers** (8, 16, 32 and 64) and also rare sizes (24, 40, 48 and 56).
+* Supports multiple dimensions of **integers** (8, 16, 32 and 64) and also rare (24, 40, 48 and 56).
 * Supports multiple dimensions of **fractional numbers** (32 and 64).
 * You can read both individual bytes and individual bits.
-* For ease of navigation through the file, you can specify BinaryStream remember some positions in the file, and later return to them again.
-* If in the file stored similar groups of data (eg, titles or frames), you can save the settings group once, and then use only the name of the group to read all the data.
-* If you plan to work with different file formats, you can save the entire configuration (which is the byte order and all the groups of fields).
+* For ease of navigation through the file, you can command BinaryStream remember some positions in the file, and later return to them again.
+* Supports data groups: save configuration once and then read similar data groups with only it's name.
+* Supports configuration files to switch between file formats and versions.
 * Unlike standard php functions, **it can work with fractional numbers written in both the direct order of bytes (Big-Endian) and the reverse one (Little-Endian)**.
-* Minimal supported **PHP version is 5.3.0** (supports all features).
+
+**Why it's objectively better pack/unpack?**
+- 64 bit int's/float's
+- selection of byte-order of float's
+- rare, but possible int's size (24, 40, 48, 56)
+- other features like data groups and configurations ...
+
+And that's all with PHP 5.3. 
 
 ## Manual
 ### Simple usage
@@ -169,9 +177,9 @@ All used data types are presented in the following table:
         
             Example:
             `$char = $s->readChar(); `
-        - `readChar($count): array of string(1)`
+        - `readChars($count): array of string(1)`
         
-            Example: `$chars = $s->readChar(4);`
+            Example: `$chars = $s->readChars(4);`
     - **integer**
         - `readInteger($sizeInBits = 32): integer`
         
