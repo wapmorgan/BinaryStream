@@ -263,10 +263,10 @@ Firstly, you need to open a file in one of the modes that allow writing of a fil
 
 | Mode       | Constant                 | Notes                                                                                     |
 |------------|--------------------------|-------------------------------------------------------------------------------------------|
-| Creation   | `BinaryStream::CREATE`   | Use to create new files.                                                                  |
-| Recreation | `BinaryStream::RECREATE` | Erase all content and allows you to create a file from scratch.                           |
-| Rewriting  | `BinaryStream::REWRITE`  | It allows you to write over the contents of the file, changing only the specific content. |
-| Appending  | `BinaryStream::APPEND`   | It allows you to append the contents of the file.                                         |
+| Creation   | `BinaryStream::CREATE`   | Creates new file. Fails when file already exists.                                         |
+| Recreation | `BinaryStream::RECREATE` | Clears all file content and sets cursor at the beginning. Fails when file doesn't exist.  |
+| Rewriting  | `BinaryStream::REWRITE`  | Opens file and sets cursor at the beginning. Fails when file doesn't exist.               |
+| Appending  | `BinaryStream::APPEND`   | Opens file and sets cursor at the end. Fails when file doesn't exist.                     |
 
 After you have correctly opened the file, you can use the following methods, named by analogy with the other designed for reading.
 
