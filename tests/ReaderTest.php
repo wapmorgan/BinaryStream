@@ -106,7 +106,7 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('C', $s->readChar());
         $this->assertEquals('A', $s->readChar());
         $s->go(0);
-        $this->assertEquals(['C', 'A'], $s->readChar(2));
+        $this->assertEquals(['C', 'A'], $s->readChars(2));
     }
 
     public function testString() {
