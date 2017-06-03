@@ -124,10 +124,10 @@ if ($stream->compare(3, 'ASC')) {
         'data_type' => 2,
     ]);
 
-    while ($data['data_type'] != 0b11) {
-        $data = $stream->readGroup('Data');
+    do {
+        $data = $stream->readGroup('DataOld');
         // Some operations with data
-    }
+    } while ($data['data_type'] != 0b11);
 }
 ```
 ### Installation
