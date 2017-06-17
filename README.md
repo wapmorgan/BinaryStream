@@ -256,7 +256,7 @@ All used data types are presented in the following table:
 | `loadConfiguration($file`  | `$stream->loadConfiguration('file_format.conf');` | Load configuration (byte order and data groups) from an external file. Configuration format - ini. To see an example of such a file, open the conf/mp3.conf file.                                     |
 | `saveConfiguration($file)` | `$stream->saveConfiguration('file_format.conf')`  | Saves the current settings of byte order and all created data groups to an external file in ini-format. This configuration can be later restored from the file with the method `loadConfiguration()`. |
 
-## Advaned usage. Writing
+## Advanced usage. Writing
 If you are the one who needs to write data to binary files, you can use additional methods to do so.
 
 Firstly, you need to open a file in one of the modes that allow writing of a file (by default, files are opened in read-only mode). For this when you create an object BinaryStream specify in second argument one of the following modes:
