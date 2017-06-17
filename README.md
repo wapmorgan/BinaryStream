@@ -16,7 +16,7 @@ With BinaryStream you can handle network packets, binary files, system protocols
 1. [**Features**](#features)
 2. [**Manual**](#manual)
 3. [**Reference**](#reference)
-4. [**Advanced usage. Writing**](#advanсed-usage-writing)
+4. [**Advanced usage. Writing**](#advanced-usage-writing)
 
 ## Features
 * Minimal supported **PHP version is 5.3.0** for all features.
