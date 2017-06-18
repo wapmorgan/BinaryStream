@@ -190,22 +190,22 @@ class BinaryStream {
         }
     }
 
-	public function readChar() {
-		$chars = $this->readChars(1);
-		return $chars[0];
-	}
+    public function readChar() {
+        $chars = $this->readChars(1);
+        return $chars[0];
+    }
 
-	public function readChars($sizeInBytes = 1) {
-		$chars = array();
+    public function readChars($sizeInBytes = 1) {
+        $chars = array();
 
-		for ($i = 0; $i < $sizeInBytes; $i++) {
-			$chars[$i] = fgetc($this->fp);
-			if ($chars[$i] !== false)
-				$this->offset++;
-		}
+        for ($i = 0; $i < $sizeInBytes; $i++) {
+            $chars[$i] = fgetc($this->fp);
+            if ($chars[$i] !== false)
+                $this->offset++;
+        }
 
-		return $chars;
-	}
+        return $chars;
+    }
 
     public function readString($sizeInBytes = 1) {
         if ($this->bitOffset > 0) {
@@ -397,7 +397,10 @@ class BinaryStream {
     }
 
     public function isEnd() {
-        return feof($this->fp);
+        // feof() is simply useless (http://php.net/manual/ru/function.feof.php#67261)
+        // check by fstat() call
+        $stat = fstat($this->fp);
+        return $this->offset >= $stat['size'];
     }
 
     public function skip($bytes) {
@@ -575,7 +578,7 @@ class BinaryStream {
     /**
      * Unpacks float (4 bytes) or double (8 bytes) from bytes. Takes into account current endianness settings.
      * @param array $bytes Array of bytes. Should contain 4 or 8 elements.
-	 * @return float Float
+     * @return float Float
      */
     protected function unpackFloat(array $bytes) {
         // own unpacker
@@ -616,7 +619,7 @@ class BinaryStream {
      * Packs float (4 bytes) or double (8 bytes) into bytes.
      * @param float|double $float Float value
      * @param int $sizeInBytes 4 or 8
-	 * @return array Array of bytes representing float
+     * @return array Array of bytes representing float
      */
     protected function packFloat($float, $sizeInBytes) {
         // unpack exponent
