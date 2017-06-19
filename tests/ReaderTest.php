@@ -35,6 +35,23 @@ class ReaderTest extends PHPUnit_Framework_TestCase {
             'b:bit_b' => 1,
             'i:rare_int' => 24,
         )));
+
+        // 0x09E424C8 = 00001001 11100100 00100100 11001000
+        $s = new BinaryStream($this->createStream(pack('N', 165946568)));
+        // $s->setEndian(BinaryStream::BIG);
+        $this->assertEquals([
+            'short1' => 9,
+            'a' => 114,
+            'b' => 2,
+            'c' => 4,
+            'short2' => 200,
+        ], $s->readGroup([
+            'i:short1' => 8,
+            'b:a' => 7,
+            'b:b' => 5,
+            'b:c' => 4,
+            'i:short2' => 8,
+        ]));
     }
 
     public function testInteger() {
