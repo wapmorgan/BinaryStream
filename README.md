@@ -16,12 +16,12 @@ With BinaryStream you can handle network packets, binary files, system protocols
 1. [**Features**](#features)
 2. [**Manual**](#manual)
 3. [**Reference**](#reference)
-    - [Data types](#Data-types)
-    - [API](#API)
-        - [Groups of fields](#Groups-of-fields)
-        - [Navigation](#Navigation)
-        - [Auxiliary](#Auxiliary)
-        - [Configurations](#Configurations)
+    - [Data types](#data-types)
+    - [API](#api)
+        - [Groups of fields](#groups-of-fields)
+        - [Navigation](#navigation)
+        - [Auxiliary](#auxiliary)
+        - [Configurations](#configurations)
 4. [**Advanced usage. Writing**](#advanced-usage-writing)
 
 ## Features
