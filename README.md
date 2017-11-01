@@ -16,6 +16,12 @@ With BinaryStream you can handle network packets, binary files, system protocols
 1. [**Features**](#features)
 2. [**Manual**](#manual)
 3. [**Reference**](#reference)
+    - [Data types](#Data-types)
+    - [API](#API)
+        - [Groups of fields](#Groups-of-fields)
+        - [Navigation](#Navigation)
+        - [Auxiliary](#Auxiliary)
+        - [Configurations](#Configurations)
 4. [**Advanced usage. Writing**](#advanced-usage-writing)
 
 ## Features
@@ -36,7 +42,7 @@ With BinaryStream you can handle network packets, binary files, system protocols
 - rare, but possible int's size (24, 40, 48, 56)
 - other features like data groups and configurations ...
 
-And that's all with PHP 5.3. 
+And that's all with PHP 5.3.
 
 ## Manual
 ### Simple usage
@@ -48,14 +54,14 @@ $text = $s->readString(20);
 ```
 This example reads 20 bytes at the beginning of the file as a string.
 
-A more complex example, where the data were located in the following order: 
+A more complex example, where the data were located in the following order:
 - **integer** (int, 32 bit)
 - **float** (float, 32 bit)
-- **flag byte** (where each bit has its own value, 8 bits): first bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type: 
+- **flag byte** (where each bit has its own value, 8 bits): first bit determines whether there after this byte written another data, 5-bit empty, and the last 2 bits of the data type:
     - `0b00` - after this data recorded 1 character (char, 8 bits)
     - `0b01` - after this data recorded 10 characters (string, 10 bytes)
     - `0b10` - after this data time in unixtime format packaged in long integer (long, 64 bits)
-    - `0b11` - not used at this moment. 
+    - `0b11` - not used at this moment.
 
 In order to read these data and those that depend on the flags, this example is suitable:
 ```php
@@ -162,61 +168,80 @@ All used data types are presented in the following table:
     `new BinaryStream($filename | $socket | $stream)`
 
 - Reading data is possible using specialized methods for each data type:
-    - **bit**:  
+    - **bit**:
         - `readBit(): boolean`
-        
-            Example: 
+
+            Example:
             `$flag = $s->readBit();`
         - `readBits(array $listOfBits): array of boolean and integers`.
-        
-            Example: 
+
+            Example:
             `$flags = $s->readBits(['a' => 2, '_' => 5, 'b' => 3]);`
             If size of field (an array element value is `1`, then this field will have `true/false`, if larger 1, then `N` consecutive bits will be combined in an `integer`.)
-    - **char**: 
+    - **char**:
         - `readChar(): string(1)`
-        
+
             Example:
-            `$char = $s->readChar(); `
+            `$char = $s->readChar();`
         - `readChars($count): array of string(1)`
-        
+
             Example: `$chars = $s->readChars(4);`
     - **integer**
         - `readInteger($sizeInBits = 32): integer`
-        
+
             Example:
-            `$int = $s->readInteger(32); `
+            `$int = $s->readInteger(32);`
             It supports the following dimensions: 8, 16, 32, 64 and 24, 40, 48, 56 bits.
     - **float**:
         - `readFloat($sizeInBits = 32): float`
-        
+
             Example:
             `$float = $s->readFloat(32);`
             It supports the following dimensions: 32, 64 bits.
     - **string**:
         - `readString($length): string($length)`
-        
-            Example: 
+
+            Example:
             `$string = $s->readString(10);`
 
-- Reading of data groups:
+#### Groups of fields
 
-| Method                     | Usage                                                       | Notes                                                                                                                                                                                                                                                                                                                                                                                 |   |
-|----------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---|
-| `readGroup($name)`         | `$data = $s->readGroup('data');`                            | It allows you to read data from pre-saved configuration. To save a group under a new name, use the method `saveGroup($name, array $fields)`                                                                                                                                                                                                                                           |   |
-| `readGroup(array $fields)` | `$data = $s->readGroup(['i:field' => 32, 's:text' => 20]);` | The fields are listed in the as array in which the keys determine the type and the name of the data fields, and values - dimension (understood as bytes for string and chars, and as bits for everything else). Supported: `s`, `c`, `i`, `f` and `b`. If the type is not specified, the field is perceived as a bit (or a few bits). The type and name are separated by a colon (:). |   |
+You can save list of fields definitions with a specific name and use it's name when you need to read the same block few times. A group is defined by **group configuration** - list of fields, their type and size. To compose group configuration create an array: **keys** define type and name of fields, **values** - their size:
+- **key** is a name of field and may contain type of field. To specify type prepend name with a type letter and a colon. Type letters:
+    - `b` - bit
+    - `i` - integer
+    - `f` - float
+    - `c` - char
+    - `s` - string
+    If type is not defined, field will be treated as a `bit`-field.
+    Example: `flag` - `bit`-field, `s:name` - `string`-field
 
-- To save a group of data under one name, use `saveGroup()` method
+- **value** is a size or a dimension of field:
+    - If field has `integer`, `float` or `bit` type, it defines size of field in term of bits.
+    - If field has `char` or `string` type, it defines size in term of bytes.
+    Example:
     ```php
-    saveGroup($name, array $fields)
+    'flags' => 16, // bits-field (16 bits = 2 bytes)
+    's:name' => 10, // string-field (80 bits = 10 bytes)
     ```
-    Create new group with few fields. If group with that name already exists, it replaces original group.
 
+So full example of group configuration:
+```php
+$group = [
+    'flags' => 16,
+    'i:date' => 32,
+    'f:summ' => 32,
+    's:name' => 10,
+];
+```
 
-- Comparation of bytes:
-    ```php
-    compare($length, $bytes)
-    ```
-    Compares `$length` bytes from current position with `$bytes`. Carrent position will not be changed. Returns **true** or **false**.
+| Method                                        | Usage                                                       | Notes                                                                                                                                                                                                                                                                                                                                                                                 |
+|-----------------------------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `saveGroup($name, array $groupConfiguration)` | `$s->saveGroup('data', ['i:field' => 32, 's:text' => 20]);` | Create new group with few fields. If group with that name already exists, it replaces original group.                                                                                                                                                                                                                                                                                 |
+| `readGroup($name)`                            | `$data = $s->readGroup('data');`                            | It allows you to read data from pre-saved configuration. To save a group under a new name, use the method `saveGroup($name, array $fields)`                                                                                                                                                                                                                                           |
+| `readGroup(array $groupConfiguration)`        | `$data = $s->readGroup(['i:field' => 32, 's:text' => 20]);` | The fields are listed in the as array in which the keys determine the type and the name of the data fields, and values - dimension (understood as bytes for string and chars, and as bits for everything else). Supported: `s`, `c`, `i`, `f` and `b`. If the type is not specified, the field is perceived as a bit (or a few bits). The type and name are separated by a colon (:). |
+
+#### Navigation
 
 - Caret moving:
     To change the position of the cursor in the file use the following methods.
@@ -241,20 +266,28 @@ All used data types are presented in the following table:
 | `markOffset($offset, $name)` | `$stream->markOffset(-128, 'FirstTag');` | It saves specific position in file under the `$name` name.         |
 | `isMarked($name)`            | `$stream->isMarked('Tag');`              | Check whether the `$name` mark set. Returns **true** or **false**. |
 
-- Endianness: 
+#### Auxiliary
+
+- Comparation of bytes:
+    ```php
+    compare($length, $bytes)
+    ```
+    Compares `$length` bytes from current position with `$bytes`. Carrent position will not be changed. Returns **true** or **false**.
+
+- Endianness:
     **By default, `BinaryStream` treats `int`'s and `long`'s in little-endian format**. To change the reading order of bytes use `setEndian($endian)` method with one of `BinaryStream` constants:
 
-| Constant             | Meaning                              |
-|----------------------|--------------------------------------|
-| BinaryStream::BIG    | Big-endian for integers and floats   |
-| BinaryStream::LITTLE | Little-endian for integers and float |
+| Constant               | Meaning                              |
+|------------------------|--------------------------------------|
+| `BinaryStream::BIG`    | Big-endian for integers and floats   |
+| `BinaryStream::LITTLE` | Little-endian for integers and float |
 
-- Configurations:
+#### Configurations
 
 | Method                     | Usage                                             | Notes                                                                                                                                                                                                 |
 |----------------------------|---------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `loadConfiguration($file`  | `$stream->loadConfiguration('file_format.conf');` | Load configuration (byte order and data groups) from an external file. Configuration format - ini. To see an example of such a file, open the conf/mp3.conf file.                                     |
-| `saveConfiguration($file)` | `$stream->saveConfiguration('file_format.conf')`  | Saves the current settings of byte order and all created data groups to an external file in ini-format. This configuration can be later restored from the file with the method `loadConfiguration()`. |
+| `saveConfiguration($file)` | `$stream->saveConfiguration('file_format.conf');` | Saves the current settings of byte order and all created data groups to an external file in ini-format. This configuration can be later restored from the file with the method `loadConfiguration()`. |
 
 ## Advanced usage. Writing
 If you are the one who needs to write data to binary files, you can use additional methods to do so.
