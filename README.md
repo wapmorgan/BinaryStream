@@ -2,8 +2,9 @@
 BinaryStream - a handy tool for working with binary data and the best replacement for pack()/unpack() with big list of features.
 
 [![Composer package](http://composer.network/badge/wapmorgan/binary-stream)](https://packagist.org/packages/wapmorgan/binary-stream)
-[![License](https://poser.pugx.org/wapmorgan/binary-stream/license)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Stable Version](https://poser.pugx.org/wapmorgan/binary-stream/version)](https://packagist.org/packages/wapmorgan/binary-stream)
+[![Total Downloads](https://poser.pugx.org/wapmorgan/binary-stream/downloads)](https://packagist.org/packages/wapmorgan/binary-stream)
+[![License](https://poser.pugx.org/wapmorgan/binary-stream/license)](https://packagist.org/packages/wapmorgan/binary-stream)
 [![Latest Unstable Version](https://poser.pugx.org/wapmorgan/binary-stream/v/unstable)](//packagist.org/packages/wapmorgan/binary-stream)
 [![Tests](https://travis-ci.org/wapmorgan/BinaryStream.svg?branch=master)](https://travis-ci.org/wapmorgan/BinaryStream)
 
